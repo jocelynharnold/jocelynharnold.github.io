@@ -1,0 +1,282 @@
+---
+title: 'Project 1: Wrangling & Exploratory Data Analysis'
+author: "Me"
+date: "2020-10-18"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
+tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```
+Jocelyn Harnold (jh67282)
+
+## Introduction
+During the last few semesters as a pre-health student, I have become more and more invested in upstream factors that affect health throughout the world. One of the most well-known poisons to our bodies is alcohol. I want to compare the life-expectancies to the amount of alcohol consumed per person for each country recorded in 2010. The dataset,"drinks", records the amount of beer, wine, and spirits consumed per person in each country in 2010 and was taken from the R-package "fivethirtyeight" while the original data was collected from the World Health Organization. What makes the "drinks" dataset interesting is that it not only records the total liters of pure alcohol per person, but also records the consumption of different categories of alcohol per person, such as the average servings of beer, spirits, and wine per person. On the other hand, I used github to find my "life" dataset which recorded the life expectancies of different countries around the world from 1950 to 2015. Specifically, this dataset includes the variables, country, country code/abbreviation, year, and life expectancy. While this dataset is not particularly interesting, it is necessary in order for me to compare the life expectancies of each country to their respective alcohol consumption per person. From the abundance of previous research, I expect to see life expectancy to have a weak negative correlation with total liters of pure alcohol consumed per person. However, I am aware that there may be many confounding factors, such as environment and education level that may disturb and complicate this correlation. Finally, I decided to add another data set that specified the regions each country belonged to so I could find a correlation between regions of the world, alcohol consumption, and life expectancy.
+
+
+```{R}
+#install.packages("fivethirtyeight")
+library(knitr)
+library(fivethirtyeight)
+data()
+?fivethirtyeight::drinks
+
+life <- read.csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-07-03/week14_global_life_expectancy.csv")
+regions <- read.csv("https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv")
+drinks <- drinks
+
+```
+
+## Tidying: Rearranging Wide/Long
+
+While the data in both datasets are already relatively tidy in the sense that every observation has its own row and every variable it own column, the dataset, drinks, is missing observations of alcohol consumption from every year except 2010. On the other hand, the "life" dataset has recorded the life expectancies for every country from 1950 to 2015. To prevent an abundance of N/As when I merge the datasets, I used `pivot_wider()` to separate the year column into different years and then I used `select()` to only include the life expectancy values from 2010. In order to demonstrate the proper use of `pivot_wider()` and `pivot_longer()`, I also made my data untidy and tidy again. First, I used `pivot_wider()` in the same way as used above to make every single distinct year a distinct column with the values under each year becoming the life expectancy corresponding with that specific year and country. Next, I used `pivot_longer()` to re-tidy the data by specifying only the numeric variables would turn into the two new columns, year and life_expectancy. The year column contained the names of the only numeric variables which were all the different year columns created previously. The values originally under the their respective year columns were compiled into a life expectancy column. I used `select()` to pick out only the region and subregions of the regions dataset. This simplification of the dataset will make the joining later a lot easier and streamlined with less N/As.
+
+```{R}
+library(tidyverse)
+
+life1 <- life %>% pivot_wider(names_from = "year", values_from = "life_expectancy") %>% select(country, code, "life_expectancy" = "2010") 
+life1
+
+life %>% pivot_wider(names_from = "year", values_from = "life_expectancy") %>% pivot_longer(is.numeric, names_to = "year", values_to = "life_expectancy")
+
+regions <- regions %>% select(name, region, "sub_region" = sub.region)
+```
+
+## Joining/Merging
+
+I decided to use `full_join()`to join my two datasets because I wanted to receive a full picture of what a combined dataset would look like without any observations omitted. The function, `full_join()` piped into `arrange(country)` came in handy because I was able to go through my complete dataset in alphabetical order after joining to see if there were any errors/ mistypes in the data that could be fixed. For example, after joining life1 (which is my modified life dataset that is exclusive to 2010) to the drinks dataset, I discovered that the United States was labeled as "USA" in the drinks dataset and "United States" in the life dataset. As a result, the observations that were supposed to belong to the same row were separated. By quickly scanning through my dataset and fixing this issue, I was able to prevent to omission of our home country from the combined data that I would later use for analysis. After using `full_join()` to combine my two datasets, I then used `na.omit()` to get rid of extra observations that could not later be used to analyze the data because they lacked vital information. Before I joined the two datasets, drinks had 193 observations and 5 variables while life 1 had 241 observations and 3 variables. Using `anti_join()`, I determined that drinks had 14 countries that were not included in life1 while life1 had 62 countries/regions that were not included in drinks. Using this information, I expected to see 76 total observations dropped from the fully joined dataset, 14 from drinks and 62 from life1. After using `full_join()` and `na.omit()` to join my datasets and omit N/As, my final dataset contained 179 observations.  I then decided to join my newly made fulldata dataset with my regions dataset in order to include regional data in the final dataset. I made sure to rename all the observations in the fulldata dataset to match the regions dataset so that when I joined, I would still have a complete final dataset observation count of 179. I used `left_join()` to join my regions dataset and fulldata because I wanted to keep all of the original fulldata intact while only adding relevant countries from the regions dataset that matched fulldata. After `na.omit()`my final fulldata dataset included 179 observations.
+```{R}
+library(dplyr)
+
+drinks[185, "country"] <- "United States"
+drinks[6, "country"] <- "Antigua and Barbuda"
+drinks[22, "country"] <- "Bosnia and Herzegovina"
+drinks[48, "country"] <- "Democratic Republic of Congo"
+drinks[111, "country"] <- "Micronesia (country)"
+drinks[142, "country"] <- "Russia"
+drinks[149, "country"] <-"Sao Tome and Principe"
+drinks[152, "country"] <-"Serbia (including Kosovo)"
+drinks[172, "country"] <- "Timor"
+drinks[175, "country"] <- "Trinidad and Tobago"
+
+dim(drinks)
+dim(life1)
+
+anti_join(drinks,life1)
+anti_join(life1, drinks)
+14 + 62
+
+fulldata <- life1 %>% full_join(drinks) %>% arrange(country) %>% na.omit
+
+fulldata[20, "country"] <- "Bolivia (Plurinational State of)"
+fulldata[24, "country"] <- "Brunei Darussalam"
+fulldata[39, "country"] <- "Côte d'Ivoire"
+fulldata[43, "country"] <- "Czechia"
+fulldata[44, "country"] <- "Congo, Democratic Republic of the"
+fulldata[75, "country"] <- "Iran (Islamic Republic of)"
+fulldata[88, "country"] <-"Lao People's Democratic Republic"
+fulldata[96, "country"] <-"North Macedonia"
+fulldata[106, "country"] <-"Micronesia (Federated States of)"
+fulldata[107, "country"] <-"Moldova, Republic of"
+fulldata[120, "country"] <- "Korea (Democratic People's Republic of)"
+fulldata[133, "country"] <- "Russian Federation"
+fulldata[139, "country"] <- "Serbia"
+fulldata[148, "country"] <- "Korea, Republic of"
+fulldata[153, "country"] <-"Eswatini"
+fulldata[156, "country"] <- "Syrian Arab Republic" 
+fulldata[158, "country"] <-  "Tanzania, United Republic of"
+fulldata[160, "country"] <-  "Timor-Leste"
+fulldata[170, "country"] <-"United Kingdom of Great Britain and Northern Ireland"
+fulldata[171, "country"] <-"United States of America"
+fulldata[175, "country"] <- "Venezuela (Bolivarian Republic of)" 
+fulldata[176, "country"] <-  "Viet Nam"
+
+anti_join(fulldata, regions, by = c("country"="name"))
+
+fulldata <- fulldata %>% left_join(regions,by = c("country"="name")) %>% arrange(country) %>% na.omit %>% rename("total_alc" = total_litres_of_pure_alcohol)
+head(fulldata)
+
+```
+
+## Wrangling
+
+First, I thought it would be interesting to find the proportion of the total pure alcohol drank that was beer, spirits, and wine, respectively. After using `mutate()`, `select()`, and `arrange()`, I found that the European countries, in general, consumed the most total alcohol but the most popular drink varied depending on the country. Supporting the stereotypes, the French drank a greater proportion of wine while Russians drank a greater proportion of spirits. Next, I took the mean for all the numeric variables in my dataset separately and then grouped by region and sub-region. The whole world drank on average more beer and a total of about 4.7 liters of pure alcohol while the average life expectancy was about 70 years old. When looking at the means grouped by region, it was clear that Europe consumed the most total alcohol while Asia consumed the least, but Europe still had the highest average life expectancy while Africa had the lowest mean life expectancy by 10 years when compared to the next closest region. The mean of subregions once again enforced that almost all the sub regions that were considered "Western" (Australia, America, Europe) had high total means of alcohol while still maintaining high mean life expectancies. The general standard deviation for all the numeric variables showed that the world has a large spread of beer drinkers (sd = 101.2112 beer cans), a large spread of total alcohol consumption (sd = ~3.7 liters), but had a relatively small spread of expected life expectancy (sd = ~ 8.6 years). The region standard deviations showed that Oceanic countries had the largest spread of total alcohol consumed but Africa had the greatest spread of life expectancy. Sub regional standard deviations showed that Eastern Asia had the highest deviation for both total alcohol consumed and life expectancy, which is expected when you think of Japan and South Korea having some of the world's highest life expectancies. The patterns shown in the variance of the general variables and then grouped by region and subregion were similar to the patterns shown in standard deviation with the exception of having the variance of spirit consumption being quite high (var = 7226.127).
+```{R}
+library(dplyr)
+library(knitr)
+
+
+#Average proportions of beer, spirits, and wine drank per person by country
+fulldata %>% mutate(prop_beer = beer_servings/total_alc,
+                    prop_spirits = spirit_servings/total_alc,
+                    prop_wine = wine_servings/total_alc) %>% select(country, region, prop_beer, prop_spirits, prop_wine, total_alc) %>% 
+  arrange(-total_alc) %>% head() %>% kable
+
+#mean for all numeric variables
+fulldata %>% select_if(is.numeric) %>% summarize(mean_total = mean(total_alc),
+                                            mean_life = mean(life_expectancy),
+                                            mean_beer = mean(beer_servings),
+                                            mean_spirits = mean(spirit_servings),
+                                            mean_wine = mean(wine_servings))%>% kable
+
+#mean for all numeric variables grouped by region
+fulldata %>% group_by(region) %>% summarize(mean_total = mean(total_alc),
+                                            mean_life = mean(life_expectancy),
+                                            mean_beer = mean(beer_servings),
+                                            mean_spirits = mean(spirit_servings),
+                                            mean_wine = mean(wine_servings))%>% kable
+
+#mean for all numeric varialbe grouped by sub region
+fulldata %>% group_by(sub_region) %>% summarize(mean_total = mean(total_alc),
+                                            mean_life = mean(life_expectancy),
+                                            mean_beer = mean(beer_servings),
+                                            mean_spirits = mean(spirit_servings),
+                                            mean_wine = mean(wine_servings))%>% kable
+
+#sd for all numeric variables
+fulldata %>% select_if(is.numeric) %>% summarize(sd_total = sd(total_alc),
+                                            sd_life = sd(life_expectancy),
+                                            sd_beer = sd(beer_servings),
+                                            sd_spirits = sd(spirit_servings),
+                                            sd_wine = sd(wine_servings))%>% kable
+
+
+#sd for all numeric variables grouped by region
+fulldata %>% group_by(region) %>% summarize(sd_total = sd(total_alc),
+                                            sd_life = sd(life_expectancy),
+                                            sd_beer = sd(beer_servings),
+                                            sd_spirits = sd(spirit_servings),
+                                            sd_wine = sd(wine_servings))%>% kable
+
+#sd for all numeric variables grouped by sub region
+fulldata %>% group_by(sub_region) %>% summarize(sd_total = sd(total_alc),
+                                            sd_life = sd(life_expectancy),
+                                            sd_beer = sd(beer_servings),
+                                            sd_spirits = sd(spirit_servings),
+                                            sd_wine = sd(wine_servings))%>% kable
+
+#var for all numeric variables
+fulldata %>% select_if(is.numeric) %>% summarize(var_total = var(total_alc),
+                                            var_life = var(life_expectancy),
+                                            var_beer = var(beer_servings),
+                                            var_spirits = var(spirit_servings),
+                                            var_wine = var(wine_servings))%>% kable
+
+#var for all numeric variables grouped by region
+fulldata %>% group_by(region) %>% summarize(var_total = var(total_alc),
+                                            var_life = var(life_expectancy),
+                                            var_beer = var(beer_servings),
+                                            var_spirits = var(spirit_servings),
+                                            var_wine = var(wine_servings))%>% kable
+
+#var for all numeric variables grouped by sub region
+fulldata %>% group_by(sub_region) %>% summarize(var_total = var(total_alc),
+                                            var_life = var(life_expectancy),
+                                            var_beer = var(beer_servings),
+                                            var_spirits = var(spirit_servings),
+                                            var_wine = var(wine_servings))%>% kable
+
+#summary of all the numeric variables; not grouped
+fulldata %>% select_if(is.numeric)%>% summary() %>%  kable
+```
+## Wrangling (2)
+
+The minimums for all the general numerical variables except for life expectancy were 0. This minimum zero consumption of alcohol is further discovered to belong to the regions, Africa and Asia where there are large Muslim populations who do not drink. The maximum of total alcohol consumed is unsurprisingly Europe while the max life expectancy belongs to Asia. Surprisingly, the max amount of beer and wine consumed in the world belongs to the African region. Using `group_by()` on two categorial variables, region and sub_region, was useful in identifying the disparities between sub regions in each region for the minimum of the numerical variables. Earlier, it was discussed that East Asia had the largest standard deviation for life expectancy and alcohol consumption, using `filter()` I was able to determine that Mongola and Japan had a difference in life expectancy of about 15 years while the zero total alcohol consumption in North Korea is contrasted starkly against South Korea's high alcohol consumption (total_alc = 9.8 liters). Finally, I created a correlation matrix comparing the numerical variables in fulldata. From this matrix, I determined that life expectancy did not have a strong correlation with any of the alcohol consumption variables. However, total alcohol consumption correlated strongly with beer servings consumed per person, pointing to the fact that most people's increased consumption of beer correlates to an increase of their total alcohol consumption.
+
+```{R}
+
+#min for all numeric variables grouped by region
+fulldata %>% group_by(region, sub_region) %>% summarize(min_total = min(total_alc),
+                                            min_life = min(life_expectancy),
+                                            min_beer = min(beer_servings),
+                                            min_spirits = min(spirit_servings),
+                                            min_wine = min(wine_servings))%>% kable
+
+
+#max for all numeric variables grouped by region
+fulldata %>% group_by(region) %>% summarize(max_total = max(total_alc),
+                                            max_life = max(life_expectancy),
+                                            max_beer = max(beer_servings),
+                                            max_spirits = max(spirit_servings),
+                                            max_wine = max(wine_servings))%>% kable
+
+#Compared the mean life expectancy and mean total alcohol consumption by liters in East Asian countries
+fulldata %>%  filter( sub_region == "Eastern Asia")%>% group_by(country) %>% summarize(mean_life = mean(life_expectancy), mean_total_alc = mean(total_alc))  %>% arrange(mean_life) %>% kable
+
+#created a correlation matrix comparing all of the numerical variables in fulldata
+cormat<- fulldata %>% select_if(is.numeric) %>% cor(use = "pair")
+cormat
+
+```
+
+## Visualizing: Heatmap
+
+The following is a correlation heatmap. As shown in the heatmap, all of the correlations between the alcohol-related variables and life expectancy did not have a strong correlation (between .37 to .48). However, it is shown that total pure alcohol consumption was strongly correlated with beer servings, showing that a greater amount of beer consumed correlates with a greater total amount of alcohol consumed in general.  
+
+```{R}
+#correlation heat map
+tidycor <- cormat %>% as.data.frame %>% rownames_to_column("var1") %>%
+pivot_longer(-1,names_to="var2",values_to="correlation")
+
+tidycor
+
+tidycor%>%ggplot(aes(var1,var2,fill=correlation))+
+geom_tile()+
+scale_fill_gradient2(low="white",mid="yellow",high="red")+ 
+geom_text(aes(label=round(correlation,2)),color = "black", size = 4)+ 
+theme(axis.text.x = element_text(angle = 90, hjust=1))+
+coord_fixed()+xlab("")+ylab("")
+
+
+```
+
+##Visualizing: Plot 1
+The following bar graph shows that Europe has the highest total alcohol consumption by far. The bars representing each region is split into different colored blocks representing the sub-regions belonging to that specific region. As shown in the in the plot, most of Africa's total alcohol consumption can be attributed to Sub-Saharan Africa. On the other hand, it can also be clearly seen that any one sub-region in Europe outdrinks the whole of Africa. Finally, it can be noted that all the largest blocks (a.k.a. sub-regions), indicating greater total alcohol consumption per person, belongs, in general, to sub-regions that are richer, Western, and predominantly Caucasian. An example is shown in the Oceania bar where Australia/New Zealand contributes to about 2/3 of Ocean's total alcohol consumption.
+
+```{R}
+#ggplot
+library(ggplot2)
+
+ggplot(fulldata, aes(x = region, y = total_alc, fill = sub_region)) + geom_bar(stat="summary", fun=mean)  + scale_y_continuous(name ="Total Alcohol Consumed Per Person (liters)", breaks=seq(0,40,5)) + xlab("Region")+ ggtitle("Total Alcohol Consumed By Region (2010)")
+```
+##Visualizing: Plot 2
+This plot compares life expectancy, total alcohol consumption, and beer servings per person during 2010. With the faceted plot, you can clearly see the difference in both life expectancy and alcohol consumption based on region. Interestingly, beer is consumed more in the Americas, Europe, and the two biggest contributors to Oceana's total alcohol consumption. Again, this drives home the observation that beer seems to be a favorite alcoholic beverage in Wester communities. In addition to this, Africa and Asia's plots can be contrasted against each other. Most of Africa's life expectancy observations are lower compared to other regions AND the consume less total alcohol and beer in general. On the other hand, Asia also consumes less total alcohol and beer compared to Western regions, but Asia has a plot that shows the region has a much better life expectancy than Africa. 
+
+```{R}
+ggplot(fulldata, aes(total_alc, life_expectancy))+ geom_point(size=3,aes(color= beer_servings))+ scale_color_gradient(low="yellow", high="red") + ggtitle("Life Expectancy versus Total Alcohol Consumption (2010)") + ylab ("Life Expectancy (years)") + xlab("Total Amount of Pure Alcohol Conusmed Per Person (liters)") + facet_wrap(~region)                                                                                  
+```
+
+
+## Dimensionality Reduction 
+After scaling and processing my numeric data into clust_fall, I used a for loop paired the silhouette method to find the optimal number clusters that would best represent my data. After running the silhouette method, the highest silhouette width indicated that 2 clusters would best represent my data. As mentioned before, I only used numerics (euclidean) to run this analysis. I then used PAM to run the cluster analysis. I visualized the clusters with GGally. From this, it was shown that cluster 1 had the countries that had a higher overall life expectancy, beer serving, spirit serving, wine serving, and total alcohol consumption. Cluster 2 consisted of a lower value in all the numerical variables and had 71 observations. On the other hand, cluster 1 had about 30 more observations, with 108 observations. From the scatterplots picture below, it is shown that none of the variables provide an extremely clear separation of the two clusters. The variable that comes the closest to a clean separation of the two clusters is total alcohol consumption. According to silhouette plot of pam, the average silhouette width is 0.43, which is considered a weak structure that can be considered artificial. According to the cluster plot, the two components explain 77.94% of the point variability. As shown in the cluster plot, component 2 does not do much to separate cluster 1 and cluster 2.
+
+```{R}
+library(cluster)
+clust_full <-fulldata%>%dplyr::select_if(is.numeric) %>% scale
+                                                                                           
+sil_width<-vector() #empty vector to hold mean sil width
+for(i in 2:10){  
+  kms <- kmeans(clust_full,centers=i) #compute k-means solution
+  sil <- silhouette(kms$cluster,dist(clust_full)) #get sil widths
+  sil_width[i]<-mean(sil[,3]) #take averages (higher is better)
+}
+ggplot()+geom_line(aes(x=1:10,y=sil_width))+scale_x_continuous(name="k",breaks=1:10)
+
+pam1<-clust_full%>% pam(k=2) #want to do 2 clusters
+pam1
+
+library(GGally)
+fulldata %>% mutate(cluster=as.factor(pam1$clustering)) %>% 
+ggpairs(columns = c("beer_servings","spirit_servings","wine_servings","total_alc","life_expectancy"), aes(color=cluster))
+
+plot(pam1, which=2)
+
+fulldata1 <- fulldata %>% mutate(cluster=as.factor(pam1$clustering))
+fulldata1 %>% group_by(cluster) %>% summarize_if(is.numeric,mean,na.rm=T)
+
+glimpse(fulldata1)
+
+plot(pam1, which=1)
+
+```
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

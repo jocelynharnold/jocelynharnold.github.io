@@ -1,0 +1,335 @@
+---
+title: "Project 2: Modeling, Inference, Prediction"
+author: "Me"
+date: "2020-11-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
+tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```
+Jocelyn Harnold (jh67282)
+
+## Introduction
+My dataset is called HI or Health Insurance and Hours Worked By Wives. The main variables used in this project is whrswk, hhi, whi, hhi2, education, race, hispanic, experience, kidslt6, kids618, husby, and region. The numeric variables include whrswk measures the hours worked per week, experience which states each wife's years of potential work experience, and husby which is the husband's income in thousands of dollars. The numerical varaibles, kidslt6 (number of kids under age of 6) and kids618 (number of kids 6-18 years old) have the class of integer but do not have more than 10 distinct values. The categorical variables include race (one of white, black, or other) and region which states where these wives lived (one of other, northcentral, south, and west). Finally, there are several binary variables included as well, hhi (the wife is coverd by husband's HI/health insurance), whi (wife has HI through her job), hhi2(husband has HI through own job), and hispanic (is the wife Hispanic?). There are 22,272 observations in total in this dataset. 
+
+
+```{R}
+#install.packages("Ecdat")
+library(knitr)
+library(Ecdat)
+library(dplyr)
+library(ggplot2)
+library(lmtest)
+library(car)
+library(sandwich)
+data()
+?Ecdat::HI
+
+class_diag<-function(probs,truth){
+
+tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+acc=sum(diag(tab))/sum(tab)
+sens=tab[2,2]/colSums(tab)[2]
+spec=tab[1,1]/colSums(tab)[1]
+ppv=tab[2,2]/rowSums(tab)[2]
+
+if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE) truth<-as.numeric(truth)-1
+
+#CALCULATE EXACT AUC
+ord<-order(probs, decreasing=TRUE)
+probs <- probs[ord]; truth <- truth[ord]
+
+TPR=cumsum(truth)/max(1,sum(truth)) 
+FPR=cumsum(!truth)/max(1,sum(!truth))
+
+dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+
+n <- length(TPR)
+auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+data.frame(acc,sens,spec,ppv,auc)
+}
+
+HI <- HI 
+HI
+
+```
+
+## MANOVA
+
+After performing a MANOVA test, came out as significant (p <0.05) which indicated the need for ANOVA tests to be run. Five ANOVA tests were run and indicated the variables whrswk, kids618, and husby were significant relationship with race. Three t-tests were run for each numeric variable. The t-tests for whrswk and race showed that the the work hours per week for white versus black wives and black versus other race wives differed. The t-tests for kids618 and race showed that all groups differed from each other (before the bonferroni correction was applied). The t-tests for husby and race showed that the husband's income in thousands of dollars differed the groups for white versus black wives and white versus other wives. In total, there were 15 tests done and there is a 53.7% probability of at least 1 type I error. The bonferroni adjusted value was 0.0033 and effectively mad made one post-hoc t-test  (HI$kids618 -> black vs other) no longer significant. After running the assumption tests (by the eyeballing method on histograms and qq plots), the first assumption was violated and therefore the others did not need to be tested. 
+
+```{R}
+man_HI <- manova(cbind(whrswk, experience, kidslt6, kids618, husby)~race,data=HI) #1 MANOVA
+summary(man_HI)
+
+summary.aov(man_HI)#5 ANOVA
+
+#total t-tests: 30
+pairwise.t.test(HI$whrswk,HI$race, p.adj="none")#3 t-tests per line (white vs black & black vs other differ)
+pairwise.t.test(HI$kids618,HI$race, p.adj="none")#3 t-tests per line (all differ)
+pairwise.t.test(HI$husby,HI$race, p.adj="none")#3 t-tests per line (white vs black & white vs other)
+
+
+1+5+9 #15 total tests
+
+#Probablility of at least 1 Type I error (0.537)
+1-.95^15
+
+#boneferroni adjusted = 0.003333333 -> made one post hoc t-test (HI$kids618 -> black vs other) no longer significant
+.05/15 
+
+#Assumptions
+library(rstatix)
+
+group <- HI$race 
+DVs <- HI %>% select(whrswk, experience, kidslt6, kids618, husby)
+
+
+DVs_sample <- sample_n(DVs, size = 5000)
+
+DVs#Test multivariate normality for each group (null: assumption met)
+sapply(split(DVs_sample,group), mshapiro_test)
+?mshapiro_test
+
+#If any p<.05, stop (assumption violated). If not, test homogeneity of covariance matrices
+
+#Box's M test (null: assumption met)
+box_m(DVs, group)
+
+#Optionally, view covariance matrices for each group
+lapply(split(DVs,group), cov)
+
+```
+
+## Randomization Test
+
+I chose to run a randomization test with the mean difference statistic for race and work hours per week for the dataset. Because race included three categories, I decided to simplify the data and get rid of the most insignificant category, other, to focus on the categories black and white which make up the majority of all the observations. 
+
+null hypothesis (H0): Mean hours worked per week is the same for black and white wives
+alternate hypothesis (HA): Mean hours worked per week is different for black and white wives
+
+The actual mean difference from the dataset is 3.532 hours and is used later as the test statistic to compare the random distribution (null hypothesis). After running the test, the p-value came out as 0 which is less than the significance threshold of 0.05. As a result, the null hypothesis is rejected, meaning that black and white wives work a different mean number of hours per week. 
+
+```{R}
+#randomization and t-test for original weight data 
+HI_no_other <- HI%>%filter(race != "other")
+
+
+HI_no_other%>%group_by(race)%>%
+  summarize(means=mean(whrswk))%>%summarize(`mean_diff`=diff(means))
+
+rand_dist<-vector() #create vector to hold diffs under null hypothesis
+
+for(i in 1:5000){
+new<-data.frame(whrswk=sample(HI_no_other$whrswk),race=HI_no_other$race) #scramble columns
+rand_dist[i]<-mean(new[new$race=="white",]$whrswk)-   
+              mean(new[new$race=="black",]$whrswk)} #compute mean difference (base R)
+
+mean(rand_dist>3.532133		 | rand_dist< -3.532133	)#pvalue: reject H0 because p-value = 0 which is less than 0.05
+
+{hist(rand_dist,main="Null Distribution",ylab="", xlim = (c(-4,4))); abline(v = c(3.532133,-3.532133),col="red")} 
+
+
+```
+
+#Linear Regression Model
+Interpreting the coefficients of this regression: 
+
+The predicted work hours per week (whrswk) for a white wife with a husband earning an average income is 25.38 hours. Controlling for the husband's income in thousands of dollars, work hours per week is 4.499 hours higher for black wives. Controlling for the husband's income in thousands of dollars, work hours per week is 1.80 hours less for wives of other races (not black or white). Controlling for race, for every one thousand dollar increase in the husband's income, the wife's working hours per week increase by 0.0133 hours. The slope for husband's income on hours worked per week by their wife is .135 greater for black wives compared to white wives. The slope for husband's income on hours worked per week by their wife is .0199 greater for other race wives compared to white wives.  
+
+After checking the assumptions, it appears that all of the assumptions are violated. The scatter of points show a patter veering slightly downward and to the right in the plot of fitted values to residuals. Likewise, the histogram and qq plot also do not look normal. Therefore, by just eyballing, all three assumption of linearity, normality, and homoskedasticity seem to be violated. From the coeftest, raceblack, husby_c, raceblack:husby_c are all still sig and there are no changes from before robust SEs.  According to the Adjusted R-squared, 0.319% of variablity in hours worked per week by wife is explained by the model. 
+
+
+```{R}
+#centered numeric variable
+HI$husby_c <- HI$husby - mean(HI$husby, na.rm = T)
+HI$whrswk_c <- HI$whrswk - mean(HI$whrswk, na.rm = T)
+
+#linear regression
+fit<-lm(whrswk ~  race * husby_c, data=HI)
+summary(fit)
+
+#plot of regression with interaction
+HI %>% ggplot(aes(husby_c, whrswk, color = race))+ geom_point() + geom_smooth(method = "lm")
+
+#assumptions
+
+plot(HI$husby_c, HI$whrswk) #does not look linear; most of the values congregated in the bottom left corner
+
+resids<-fit$residuals
+fitvals<-fit$fitted.values
+plot(fitvals,resids); abline(h=0, col='red') #there is not an even scatter of points and looks not normal (variance)
+
+par(mfrow=c(1,2)); hist(resids); qqnorm(resids); qqline(resids, col='red')#again; does not look normal with the histogram and qq plot (normality)
+
+#robust SE
+coeftest(fit, vcov=vcovHC(fit)) #raceblack, husby_c, raceblack:husby_c are still sig; no changes
+
+#Proportion of variation in outcome -> given by Adjusted R-squared 0.319% of variablity in hours worked per week by wife is explained by the model
+
+```
+
+##Bootstrapped
+
+There actually was not a considerable difference observed between the bootstrapped and original/robust SEs. If anything, the robust SEs seemed to be closer to the bootstrapped SEs. 
+
+```{R}
+
+# here's a way to sample people/rows from your dataset with replacement
+boot_HI<- sample_frac(HI, replace=T)
+
+# repeat 5000 times
+samp_distn<-replicate(5000, {
+  boot_HI <- sample_frac(HI, replace=T) #take bootstrap sample of rows
+  fit2 <- lm(whrswk ~  race * husby_c, data=boot_HI) #fit model on bootstrap sample
+  coef(fit2) #save coefs
+}) 
+ 
+## Estimated/boostrap SEs
+samp_distn %>% t %>% as.data.frame %>% summarize_all(sd) #standard error 
+
+
+```
+
+##Logistic Regression model (binary)
+
+The odds of a white wife working an average number of hourse per week having health insurance through her job is -0.885. For wives who work an average number of hours per week, the odds of black wives having health insurance through their jobs is 0.003344 times the odds for white wives. For wives who work an average number of hours per week, the odds of other race wives having health insurance through their jobs is 0.527 times lower than the odds for white wives. For white wives, each one-hour increase in working hours per week increases the odds of a wife having health insurance through their job 0.0841 times.  
+
+The confusion matrix is shown below. 
+
+The accuracy is 0.755, sensitivity is 0.803, specificity is 0.726, ppv is 0.636, and auc is 0.806. All of these diagnostic values are show to be pretty good. The AUS values is officially categorized as good according to the rule of thumb. After generating the ROC curve and calculating the AUC, the same good AUC of 0.806 was found.
+```{R}
+#Logistic Regression
+fit1<-glm(whi~race+whrswk_c,data=HI, family="binomial")
+summary(fit1)
+
+#Predict values
+prob <- predict(fit1, type = "response")
+
+#Confusion Matrix
+table(predict = as.numeric(prob > 0.5), truth = HI$whi) %>% 
+    addmargins
+
+#Diagnostic Values such as accuracy, TPR, etc. 
+class_diag(prob, HI$whi)
+
+#Density Plot
+HI$logit<-predict(fit1, type= "link") #get predicted log-odds (logits)
+
+HI %>% ggplot(aes(logit, fill=whi))+geom_density(alpha=.3)+
+  geom_vline(xintercept=0,lty=2)
+
+#ROC Curve and AUC
+library(plotROC)
+ROCplot<-ggplot(HI)+geom_roc(aes(d=whi,m=prob), n.cuts=0) 
+
+ROCplot
+
+calc_auc(ROCplot)
+```
+
+##Logistic Regression with all variables
+
+The accuracy is 0.796, sensitivity is 0.691, specificity is 0.859, ppv is 0.744, and auc is 0.882. Since the model includes all of the variables in the dataset (except one), it is a given that the AUC is considered good and the other diagnostics also appear decent to good. After performing the 10-fold CV, the accuracy is 0.796, sensitivity is 0.691, specificity is 0.859, ppv is 0.744, and auc is 0.883. It is kind of strange that none of these values changed all that much, and the AUC remains in the good territory. After performing LASSO, education.L, hhiyes, hhi2yes, hispanicyes, regionsouth were the the variables retained. Most of these variables had to be modified and made into dummy cariables because only one category out of several were actually significant. Finally, after performing a 10-fold CV on only the variable lasso selected, the AUC calculated was 0.732 which is deemed a fair AUC. This AUC is actually one level lower than the previous logistic regression AUCs because it gets rid of a lot of the flexibility provided to the other logistic regression models with more variables. 
+
+
+```{R}
+#Model and Diagnostics with all variables and interactions
+fit4 <-glm(whi~(.)^2, data=HI, family="binomial") 
+summary(fit4)
+
+prob1 <- predict(fit4, type = "response")
+
+class_diag(prob1, HI$whi)
+
+#10-fold CV
+k=10
+
+data<-HI[sample(nrow(HI)),] #put dataset in random order
+folds<-cut(seq(1:nrow(HI)),breaks=k,labels=F) #create folds
+
+diags<-NULL
+for(i in 1:k){          # FOR EACH OF 10 FOLDS
+train<-data[folds!=i,] # CREATE TRAINING SET
+test<-data[folds==i,]  # CREATE TESTING SET
+
+truth<-test$whi
+
+fit<- glm(whi~., data = train, family="binomial")
+probs<- predict(fit4,newdata = test,type="response")
+
+diags<-rbind(diags,class_diag(probs,truth)) #CV DIAGNOSTICS FOR EACH FOLD
+}
+
+summarize_all(diags,mean) #AVERAGE THE DIAGNOSTICS ACROSS THE 10 FOLDS
+
+#LASSO
+library(glmnet)
+
+HI1<-HI%>%na.omit()%>%as.matrix()
+y <- as.matrix(HI$whi)  #grab response
+HI_preds <- model.matrix(whi ~ ., data = HI)[, -1]  #predictors (drop intercept)
+
+HI_preds <- scale(HI_preds)
+
+cv <- cv.glmnet(HI_preds, y, family = "binomial")  #picks an optimal value for lambda through 10-fold CV
+
+# make a plot of the coefficients for different values of
+# lambda
+{
+    plot(cv$glmnet.fit, "lambda", label = TRUE)
+    abline(v = log(cv$lambda.1se))
+    abline(v = log(cv$lambda.min), lty = 2)
+}
+
+head(HI_preds)
+
+lasso_fit <- glmnet(HI_preds, y, family = "binomial", lambda = cv$lambda.1se)
+coef(lasso_fit)
+
+#10-fold CV lasso
+k = 10
+
+class(HI_preds)
+
+# create dummies for the ranks
+HI2 <- HI %>% mutate(education.L = ifelse(HI$education == 
+    "L", 1, 0), hhiyes = ifelse(HI$hhi == 
+    "yes", 1, 0), hhi2yes = ifelse(HI$hhi2 == 
+    "yes", 1, 0), hispanicyes = ifelse(HI$hispanic == 
+    "yes", 1, 0), regionsouth = ifelse(HI$region == 
+    "south", 1, 0))
+
+
+data1 <- HI2[sample(nrow(HI2)), ]  #randomly order rows
+folds <- cut(seq(1:nrow(HI2)), breaks = k, labels = F)  #create folds
+
+diags <- NULL
+for (i in 1:k) {
+    ## Create training and test sets
+    train <- data1[folds != i, ]
+    test <- data1[folds == i, ]
+    
+    truth <- test$whi  ## Truth labels for fold i
+    
+    ## Train model on training set (all but fold i)
+    fit <- glm(whi ~ hhiyes + hhi2yes + education.L + hispanicyes + experience + kids618 + regionsouth, 
+        data = train, family = "binomial")
+    
+    ## Test model on test set (fold i)
+    probs <- predict(fit, newdata = test, type = "response")
+    
+    ## Get diagnostics for fold i
+    diags <- rbind(diags, class_diag(probs, truth))
+}
+
+
+summarize_all(diags, mean)  #average diagnostics across all k folds
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

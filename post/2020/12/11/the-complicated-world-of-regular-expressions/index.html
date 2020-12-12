@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Jocelyn Harnold" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../../../../img/favicon.ico">
+    <title>The Complicated World of Regular Expressions</title>
+    <meta name="generator" content="Hugo 0.79.0" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../../../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../../../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../../../../post/">BLOG</a></li>
+        
+        <li><a href="../../../../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../../../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../../../../post/2020/12/11/the-complicated-world-of-regular-expressions/">The Complicated World of Regular Expressions</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         December 11, 2020 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<div id="the-complicated-world-of-regular-expressions" class="section level1">
+<h1>The Complicated World of Regular Expressions</h1>
+<p>Regular expressions, or regex, are one of the most difficult yet useful things I have learned so far this year. Though regex has complicated notation that I still cannot commit to memory, it is undoubtedly one of the most important tools with the right type of data. By definition, regex &quot;extract information from text by searching for matches of a specific pattern.&quot; While their fuction in parsing/replacing strings or reformatting/cleaning data is undoubtable, subtle nuances in code, such as the difference in &quot;.+ or .*&quot; or accidentally including a whitespace, can cause your code to miss important data. Nevertheless, when done accurately, nothing can beat the powers of regex used under the right conditions.</p>
+<div id="regex-uses" class="section level2">
+<h2>Regex Uses</h2>
+<p>Other than just matching and identifying matching strings, regex has many other uses, including but not limited to substitution and matching multiple groups. For the sake of simplicity, using a single string with a sentence is one of the best ways to demonstrate regex's function. In the string, I chose to use an age-old tongue twister about Peter Piper. Since all of the words are repeated multiple times within the string, it serves as an interesting way to dissect the what exactly makes the tongue twister so difficult to say. In the following python chunk, <code>re.sub()</code>, <code>re.split()</code>, and <code>re.findall</code> were used in various ways to isolate sections of the tongue twister.</p>
+<pre class="python"><code>import re
+
+string = &quot;Peter Piper picked a peck of pickled peppers\nA peck of pickled peppers Peter Piper picked\nIf Peter Piper picked a peck of pickled peppers\nWhere’s the peck of pickled peppers Peter Piper picked?&quot;
+
+print(string) #shows that &quot;\n&quot; indicates a new line when the string is printed</code></pre>
+<pre><code>## Peter Piper picked a peck of pickled peppers
+## A peck of pickled peppers Peter Piper picked
+## If Peter Piper picked a peck of pickled peppers
+## Where’s the peck of pickled peppers Peter Piper picked?</code></pre>
+<pre class="python"><code>re.sub(r&quot;[\n]&quot;,&quot;, &quot;,string) #replace new line with a comma and space between each phrase instead. </code></pre>
+<pre><code>## &#39;Peter Piper picked a peck of pickled peppers, A peck of pickled peppers Peter Piper picked, If Peter Piper picked a peck of pickled peppers, Where’s the peck of pickled peppers Peter Piper picked?&#39;</code></pre>
+<pre class="python"><code>re.split(r&#39;.peppers.*&#39;,string) #split the string by using peppers as a divider</code></pre>
+<pre><code>## [&#39;Peter Piper picked a peck of pickled&#39;, &#39;\nA peck of pickled&#39;, &#39;\nIf Peter Piper picked a peck of pickled&#39;, &#39;\nWhere’s the peck of pickled&#39;, &#39;&#39;]</code></pre>
+<pre class="python"><code>re.findall(r&quot;.*Peter Piper picked&quot;, string) #Displays multiple matches for Peter Piper picked
+</code></pre>
+<pre><code>## [&#39;Peter Piper picked&#39;, &#39;A peck of pickled peppers Peter Piper picked&#39;, &#39;If Peter Piper picked&#39;, &#39;Where’s the peck of pickled peppers Peter Piper picked&#39;]</code></pre>
+</div>
+<div id="regex-in-action-with-datasets" class="section level2">
+<h2>Regex in Action with Datasets</h2>
+<p>Take for example, the drinks dataset under the package fivethirtyeight in R. I previously used drinks in a project to identify the amount of different types of alcoholic beverages were consumed by each country in one year. Regex presents itself as a way to identify countries using patterns. Similarly, I used the HI dataset under the Ecdat package in R to further demonstrate regex's capabilities.</p>
+<pre class="r"><code>#This is a R chunk
+
+library(reticulate)
+
+library(fivethirtyeight)</code></pre>
+<pre><code>## Some larger datasets need to be installed separately, like senators and
+## house_district_forecast. To install these, we recommend you install the
+## fivethirtyeightdata package by running:
+## install.packages(&#39;fivethirtyeightdata&#39;, repos =
+## &#39;https://fivethirtyeightdata.github.io/drat/&#39;, type = &#39;source&#39;)</code></pre>
+<pre class="r"><code>library(Ecdat)</code></pre>
+<pre><code>## Loading required package: Ecfun</code></pre>
+<pre><code>## 
+## Attaching package: &#39;Ecfun&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:base&#39;:
+## 
+##     sign</code></pre>
+<pre><code>## 
+## Attaching package: &#39;Ecdat&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:datasets&#39;:
+## 
+##     Orange</code></pre>
+<pre class="r"><code>drinks &lt;- drinks
+
+HI &lt;- HI</code></pre>
+<p>After calling the datasets, drinks and HI, in R, the python chunk below shows that datasets called in R can speak to python (and vice versa) using reticulate. Below are just a few examples of how regex can be used to single out specific countries (e.g. USA) or call countries that have a certain non-alphanumeric symbol (e.g. ___ &amp; ___). Similarly, the observation of wives with a ranges of education can also be singled out if regex is used correctly!</p>
+<pre class="python"><code>#This is a python chunk
+
+print(r.drinks.head())</code></pre>
+<pre><code>##        country  beer_servings  spirit_servings  wine_servings  \
+## 0  Afghanistan              0                0              0   
+## 1      Albania             89              132             54   
+## 2      Algeria             25                0             14   
+## 3      Andorra            245              138            312   
+## 4       Angola            217               57             45   
+## 
+##    total_litres_of_pure_alcohol  
+## 0                           0.0  
+## 1                           4.9  
+## 2                           0.7  
+## 3                          12.4  
+## 4                           5.9</code></pre>
+<pre class="python"><code>import re
+drink = r.drinks
+
+drink[drink.country.str.contains(&quot;\s\W\s&quot;, regex = True)] #matches with countries/regions that have a symbol within their names</code></pre>
+<pre><code>##                           country  beer_servings  spirit_servings  \
+## 5               Antigua &amp; Barbuda            102              128   
+## 143             St. Kitts &amp; Nevis            194              205   
+## 145  St. Vincent &amp; the Grenadines            120              221   
+## 148           Sao Tome &amp; Principe             56               38   
+## 174             Trinidad &amp; Tobago            197              156   
+## 
+##      wine_servings  total_litres_of_pure_alcohol  
+## 5               45                           4.9  
+## 143             32                           7.7  
+## 145             11                           6.3  
+## 148            140                           4.2  
+## 174              7                           6.4</code></pre>
+<pre class="python"><code>drink[drink.country.str.contains(&quot;A$&quot;, regex = True)] #singles out USA </code></pre>
+<pre><code>##     country  beer_servings  spirit_servings  wine_servings  \
+## 184     USA            249              158             84   
+## 
+##      total_litres_of_pure_alcohol  
+## 184                           8.7</code></pre>
+<pre class="python"><code>HI = r.HI
+
+HI_mid = HI[HI.education.str.contains(&quot;\d.*\W\d\d&quot;, regex = True)] #identifies wives with a range of years recorded as education
+
+HI_mid.head()
+</code></pre>
+<pre><code>##     whrswk  hhi  whi hhi2   education   race hispanic  experience  kidslt6  \
+## 1        0   no   no   no  13-15years  white       no        13.0        2   
+## 2       50   no  yes   no  13-15years  white       no        24.0        0   
+## 4       40   no  yes  yes  13-15years  white       no        17.0        0   
+## 5        0  yes   no  yes   9-11years  white       no        44.5        0   
+## 10      30   no   no  yes  13-15years  white       no         7.0        1   
+## 
+##     kids618  husby        region    wght  
+## 1         1  11.96  northcentral  214986  
+## 2         1   1.20  northcentral  210119  
+## 4         1   9.00  northcentral  210317  
+## 5         0   0.00  northcentral  219955  
+## 10        0  30.00  northcentral  214874</code></pre>
+<p>Too bad the drinks dataset only included data from 2010, 2020 definitely has been a record-breaking year for drinking among other things.</p>
+<div class="figure">
+<img src="../../../../../post/2020-12-12-the-complicated-world-of-regular-expressions_files/4bwisb.jpg" />
+
+</div>
+</div>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../../../../js/docs.min.js"></script>
+<script src="../../../../../js/main.js"></script>
+
+<script src="../../../../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

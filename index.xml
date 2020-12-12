@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Chris Turner</title>
+    <link>/</link>
+    <description>Recent content on Chris Turner</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language>
+    <lastBuildDate>Fri, 11 Dec 2020 00:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>The Complicated World of Regular Expressions</title>
+      <link>/post/2020/12/11/the-complicated-world-of-regular-expressions/</link>
+      <pubDate>Fri, 11 Dec 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2020/12/11/the-complicated-world-of-regular-expressions/</guid>
+      <description>The Complicated World of Regular Expressions Regular expressions, or regex, are one of the most difficult yet useful things I have learned so far this year. Though regex has complicated notation that I still cannot commit to memory, it is undoubtedly one of the most important tools with the right type of data. By definition, regex &amp;quot;extract information from text by searching for matches of a specific pattern.&amp;quot; While their fuction in parsing/replacing strings or reformatting/cleaning data is undoubtable, subtle nuances in code, such as the difference in &amp;quot;.</description>
+    </item>
+    
+    <item>
+      <title>Project 2: Modeling, Inference, Prediction</title>
+      <link>/project/project2/</link>
+      <pubDate>Wed, 25 Nov 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project2/</guid>
+      <description>Jocelyn Harnold (jh67282)
+Introduction My dataset is called HI or Health Insurance and Hours Worked By Wives. The main variables used in this project is whrswk, hhi, whi, hhi2, education, race, hispanic, experience, kidslt6, kids618, husby, and region. The numeric variables include whrswk measures the hours worked per week, experience which states each wife&#39;s years of potential work experience, and husby which is the husband&#39;s income in thousands of dollars.</description>
+    </item>
+    
+    <item>
+      <title>Project 1: Wrangling &amp; Exploratory Data Analysis</title>
+      <link>/project/project1/</link>
+      <pubDate>Sun, 18 Oct 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project1/</guid>
+      <description>Jocelyn Harnold (jh67282)
+Introduction During the last few semesters as a pre-health student, I have become more and more invested in upstream factors that affect health throughout the world. One of the most well-known poisons to our bodies is alcohol. I want to compare the life-expectancies to the amount of alcohol consumed per person for each country recorded in 2010. The dataset,&amp;quot;drinks&amp;quot;, records the amount of beer, wine, and spirits consumed per person in each country in 2010 and was taken from the R-package &amp;quot;fivethirtyeight&amp;quot; while the original data was collected from the World Health Organization.</description>
+    </item>
+    
+    <item>
+      <title>Hello R Markdown</title>
+      <link>/post/2015/07/23/hello-r-markdown/</link>
+      <pubDate>Thu, 23 Jul 2015 21:13:14 -0500</pubDate>
+      
+      <guid>/post/2015/07/23/hello-r-markdown/</guid>
+      <description>R Markdown This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see http://rmarkdown.rstudio.com.
+You can embed an R code chunk like this:
+summary(cars) ## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 26.00 ## Median :15.0 Median : 36.00 ## Mean :15.4 Mean : 42.98 ## 3rd Qu.</description>
+    </item>
+    
+    <item>
+      <title>Projects</title>
+      <link>/projects/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/projects/</guid>
+      <description> Check out some of my coding projects below:
+ Wrangling &amp;amp; Exploratory Data Analysis
+ Modeling, Inference, Prediction
+  -- </description>
+    </item>
+    
+    <item>
+      <title>Resume</title>
+      <link>/resume/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/resume/</guid>
+      <description>    </description>
+    </item>
+    
+  </channel>
+</rss>

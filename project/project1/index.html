@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Jocelyn Harnold" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
+    <title>Project 1: Wrangling &amp; Exploratory Data Analysis</title>
+    <meta name="generator" content="Hugo 0.79.0" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../post/">BLOG</a></li>
+        
+        <li><a href="../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../project/project1/">Project 1: Wrangling &amp; Exploratory Data Analysis</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         October 18, 2020 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<p>Jocelyn Harnold (jh67282)</p>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>During the last few semesters as a pre-health student, I have become more and more invested in upstream factors that affect health throughout the world. One of the most well-known poisons to our bodies is alcohol. I want to compare the life-expectancies to the amount of alcohol consumed per person for each country recorded in 2010. The dataset,&quot;drinks&quot;, records the amount of beer, wine, and spirits consumed per person in each country in 2010 and was taken from the R-package &quot;fivethirtyeight&quot; while the original data was collected from the World Health Organization. What makes the &quot;drinks&quot; dataset interesting is that it not only records the total liters of pure alcohol per person, but also records the consumption of different categories of alcohol per person, such as the average servings of beer, spirits, and wine per person. On the other hand, I used github to find my &quot;life&quot; dataset which recorded the life expectancies of different countries around the world from 1950 to 2015. Specifically, this dataset includes the variables, country, country code/abbreviation, year, and life expectancy. While this dataset is not particularly interesting, it is necessary in order for me to compare the life expectancies of each country to their respective alcohol consumption per person. From the abundance of previous research, I expect to see life expectancy to have a weak negative correlation with total liters of pure alcohol consumed per person. However, I am aware that there may be many confounding factors, such as environment and education level that may disturb and complicate this correlation. Finally, I decided to add another data set that specified the regions each country belonged to so I could find a correlation between regions of the world, alcohol consumption, and life expectancy.</p>
+<pre class="r"><code># install.packages(&#39;fivethirtyeight&#39;)
+library(knitr)
+library(fivethirtyeight)
+data()
+`?`(fivethirtyeight::drinks)
+
+life &lt;- read.csv(&quot;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-07-03/week14_global_life_expectancy.csv&quot;)
+regions &lt;- read.csv(&quot;https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv&quot;)
+drinks &lt;- drinks</code></pre>
+</div>
+<div id="tidying-rearranging-widelong" class="section level2">
+<h2>Tidying: Rearranging Wide/Long</h2>
+<p>While the data in both datasets are already relatively tidy in the sense that every observation has its own row and every variable it own column, the dataset, drinks, is missing observations of alcohol consumption from every year except 2010. On the other hand, the &quot;life&quot; dataset has recorded the life expectancies for every country from 1950 to 2015. To prevent an abundance of N/As when I merge the datasets, I used <code>pivot_wider()</code> to separate the year column into different years and then I used <code>select()</code> to only include the life expectancy values from 2010. In order to demonstrate the proper use of <code>pivot_wider()</code> and <code>pivot_longer()</code>, I also made my data untidy and tidy again. First, I used <code>pivot_wider()</code> in the same way as used above to make every single distinct year a distinct column with the values under each year becoming the life expectancy corresponding with that specific year and country. Next, I used <code>pivot_longer()</code> to re-tidy the data by specifying only the numeric variables would turn into the two new columns, year and life_expectancy. The year column contained the names of the only numeric variables which were all the different year columns created previously. The values originally under the their respective year columns were compiled into a life expectancy column. I used <code>select()</code> to pick out only the region and subregions of the regions dataset. This simplification of the dataset will make the joining later a lot easier and streamlined with less N/As.</p>
+<pre class="r"><code>library(tidyverse)
+
+life1 &lt;- life %&gt;% pivot_wider(names_from = &quot;year&quot;, values_from = &quot;life_expectancy&quot;) %&gt;% 
+    select(country, code, life_expectancy = &quot;2010&quot;)
+life1</code></pre>
+<pre><code>## # A tibble: 241 x 3
+##    country             code  life_expectancy
+##    &lt;fct&gt;               &lt;fct&gt;           &lt;dbl&gt;
+##  1 Afghanistan         &quot;AFG&quot;            61.2
+##  2 Africa              &quot;&quot;               58.7
+##  3 Albania             &quot;ALB&quot;            76.7
+##  4 Algeria             &quot;DZA&quot;            74.7
+##  5 Angola              &quot;AGO&quot;            58.2
+##  6 Antigua and Barbuda &quot;ATG&quot;            75.4
+##  7 Argentina           &quot;ARG&quot;            75.6
+##  8 Armenia             &quot;ARM&quot;            73.3
+##  9 Aruba               &quot;ABW&quot;            75.0
+## 10 Asia                &quot;&quot;               71.1
+## # … with 231 more rows</code></pre>
+<pre class="r"><code>life %&gt;% pivot_wider(names_from = &quot;year&quot;, values_from = &quot;life_expectancy&quot;) %&gt;% 
+    pivot_longer(is.numeric, names_to = &quot;year&quot;, values_to = &quot;life_expectancy&quot;)</code></pre>
+<pre><code>## # A tibble: 73,987 x 4
+##    country     code  year  life_expectancy
+##    &lt;fct&gt;       &lt;fct&gt; &lt;chr&gt;           &lt;dbl&gt;
+##  1 Afghanistan AFG   1950             27.5
+##  2 Afghanistan AFG   1951             27.8
+##  3 Afghanistan AFG   1952             28.4
+##  4 Afghanistan AFG   1953             28.9
+##  5 Afghanistan AFG   1954             29.4
+##  6 Afghanistan AFG   1955             29.9
+##  7 Afghanistan AFG   1956             30.4
+##  8 Afghanistan AFG   1957             30.9
+##  9 Afghanistan AFG   1958             31.4
+## 10 Afghanistan AFG   1959             31.8
+## # … with 73,977 more rows</code></pre>
+<pre class="r"><code>regions &lt;- regions %&gt;% select(name, region, sub_region = sub.region)</code></pre>
+</div>
+<div id="joiningmerging" class="section level2">
+<h2>Joining/Merging</h2>
+<p>I decided to use <code>full_join()</code>to join my two datasets because I wanted to receive a full picture of what a combined dataset would look like without any observations omitted. The function, <code>full_join()</code> piped into <code>arrange(country)</code> came in handy because I was able to go through my complete dataset in alphabetical order after joining to see if there were any errors/ mistypes in the data that could be fixed. For example, after joining life1 (which is my modified life dataset that is exclusive to 2010) to the drinks dataset, I discovered that the United States was labeled as &quot;USA&quot; in the drinks dataset and &quot;United States&quot; in the life dataset. As a result, the observations that were supposed to belong to the same row were separated. By quickly scanning through my dataset and fixing this issue, I was able to prevent to omission of our home country from the combined data that I would later use for analysis. After using <code>full_join()</code> to combine my two datasets, I then used <code>na.omit()</code> to get rid of extra observations that could not later be used to analyze the data because they lacked vital information. Before I joined the two datasets, drinks had 193 observations and 5 variables while life 1 had 241 observations and 3 variables. Using <code>anti_join()</code>, I determined that drinks had 14 countries that were not included in life1 while life1 had 62 countries/regions that were not included in drinks. Using this information, I expected to see 76 total observations dropped from the fully joined dataset, 14 from drinks and 62 from life1. After using <code>full_join()</code> and <code>na.omit()</code> to join my datasets and omit N/As, my final dataset contained 179 observations. I then decided to join my newly made fulldata dataset with my regions dataset in order to include regional data in the final dataset. I made sure to rename all the observations in the fulldata dataset to match the regions dataset so that when I joined, I would still have a complete final dataset observation count of 179. I used <code>left_join()</code> to join my regions dataset and fulldata because I wanted to keep all of the original fulldata intact while only adding relevant countries from the regions dataset that matched fulldata. After <code>na.omit()</code>my final fulldata dataset included 179 observations.</p>
+<pre class="r"><code>library(dplyr)
+
+drinks[185, &quot;country&quot;] &lt;- &quot;United States&quot;
+drinks[6, &quot;country&quot;] &lt;- &quot;Antigua and Barbuda&quot;
+drinks[22, &quot;country&quot;] &lt;- &quot;Bosnia and Herzegovina&quot;
+drinks[48, &quot;country&quot;] &lt;- &quot;Democratic Republic of Congo&quot;
+drinks[111, &quot;country&quot;] &lt;- &quot;Micronesia (country)&quot;
+drinks[142, &quot;country&quot;] &lt;- &quot;Russia&quot;
+drinks[149, &quot;country&quot;] &lt;- &quot;Sao Tome and Principe&quot;
+drinks[152, &quot;country&quot;] &lt;- &quot;Serbia (including Kosovo)&quot;
+drinks[172, &quot;country&quot;] &lt;- &quot;Timor&quot;
+drinks[175, &quot;country&quot;] &lt;- &quot;Trinidad and Tobago&quot;
+
+dim(drinks)</code></pre>
+<pre><code>## [1] 193   5</code></pre>
+<pre class="r"><code>dim(life1)</code></pre>
+<pre><code>## [1] 241   3</code></pre>
+<pre class="r"><code>anti_join(drinks, life1)</code></pre>
+<pre><code>## # A tibble: 14 x 5
+##    country       beer_servings spirit_servings wine_servings total_litres_of_pu…
+##    &lt;chr&gt;                 &lt;int&gt;           &lt;int&gt;         &lt;int&gt;               &lt;dbl&gt;
+##  1 Andorra                 245             138           312                12.4
+##  2 Cabo Verde              144              56            16                 4  
+##  3 Cook Islands              0             254            74                 5.9
+##  4 Dominica                 52             286            26                 6.6
+##  5 Marshall Isl…             0               0             0                 0  
+##  6 Monaco                    0               0             0                 0  
+##  7 Nauru                    49               0             8                 1  
+##  8 Niue                    188             200             7                 7  
+##  9 Palau                   306              63            23                 6.9
+## 10 St. Kitts &amp; …           194             205            32                 7.7
+## 11 St. Lucia               171             315            71                10.1
+## 12 St. Vincent …           120             221            11                 6.3
+## 13 San Marino                0               0             0                 0  
+## 14 Tuvalu                    6              41             9                 1</code></pre>
+<pre class="r"><code>anti_join(life1, drinks)</code></pre>
+<pre><code>## # A tibble: 62 x 3
+##    country               code       life_expectancy
+##    &lt;fct&gt;                 &lt;fct&gt;                &lt;dbl&gt;
+##  1 Africa                &quot;&quot;                    58.7
+##  2 Aruba                 &quot;ABW&quot;                 75.0
+##  3 Asia                  &quot;&quot;                    71.1
+##  4 Australia/New Zealand &quot;&quot;                    81.7
+##  5 Cape Verde            &quot;CPV&quot;                 71.9
+##  6 Caribbean             &quot;&quot;                    71.9
+##  7 Central America       &quot;&quot;                    75.3
+##  8 Central Asia          &quot;&quot;                    68.7
+##  9 Channel Islands       &quot;OWID_CIS&quot;            80.1
+## 10 Curacao               &quot;CUW&quot;                 77.0
+## # … with 52 more rows</code></pre>
+<pre class="r"><code>14 + 62</code></pre>
+<pre><code>## [1] 76</code></pre>
+<pre class="r"><code>fulldata &lt;- life1 %&gt;% full_join(drinks) %&gt;% arrange(country) %&gt;% 
+    na.omit
+
+fulldata[20, &quot;country&quot;] &lt;- &quot;Bolivia (Plurinational State of)&quot;
+fulldata[24, &quot;country&quot;] &lt;- &quot;Brunei Darussalam&quot;
+fulldata[39, &quot;country&quot;] &lt;- &quot;Côte d&#39;Ivoire&quot;
+fulldata[43, &quot;country&quot;] &lt;- &quot;Czechia&quot;
+fulldata[44, &quot;country&quot;] &lt;- &quot;Congo, Democratic Republic of the&quot;
+fulldata[75, &quot;country&quot;] &lt;- &quot;Iran (Islamic Republic of)&quot;
+fulldata[88, &quot;country&quot;] &lt;- &quot;Lao People&#39;s Democratic Republic&quot;
+fulldata[96, &quot;country&quot;] &lt;- &quot;North Macedonia&quot;
+fulldata[106, &quot;country&quot;] &lt;- &quot;Micronesia (Federated States of)&quot;
+fulldata[107, &quot;country&quot;] &lt;- &quot;Moldova, Republic of&quot;
+fulldata[120, &quot;country&quot;] &lt;- &quot;Korea (Democratic People&#39;s Republic of)&quot;
+fulldata[133, &quot;country&quot;] &lt;- &quot;Russian Federation&quot;
+fulldata[139, &quot;country&quot;] &lt;- &quot;Serbia&quot;
+fulldata[148, &quot;country&quot;] &lt;- &quot;Korea, Republic of&quot;
+fulldata[153, &quot;country&quot;] &lt;- &quot;Eswatini&quot;
+fulldata[156, &quot;country&quot;] &lt;- &quot;Syrian Arab Republic&quot;
+fulldata[158, &quot;country&quot;] &lt;- &quot;Tanzania, United Republic of&quot;
+fulldata[160, &quot;country&quot;] &lt;- &quot;Timor-Leste&quot;
+fulldata[170, &quot;country&quot;] &lt;- &quot;United Kingdom of Great Britain and Northern Ireland&quot;
+fulldata[171, &quot;country&quot;] &lt;- &quot;United States of America&quot;
+fulldata[175, &quot;country&quot;] &lt;- &quot;Venezuela (Bolivarian Republic of)&quot;
+fulldata[176, &quot;country&quot;] &lt;- &quot;Viet Nam&quot;
+
+anti_join(fulldata, regions, by = c(country = &quot;name&quot;))</code></pre>
+<pre><code>## # A tibble: 0 x 7
+## # … with 7 variables: country &lt;chr&gt;, code &lt;fct&gt;, life_expectancy &lt;dbl&gt;,
+## #   beer_servings &lt;int&gt;, spirit_servings &lt;int&gt;, wine_servings &lt;int&gt;,
+## #   total_litres_of_pure_alcohol &lt;dbl&gt;</code></pre>
+<pre class="r"><code>fulldata &lt;- fulldata %&gt;% left_join(regions, by = c(country = &quot;name&quot;)) %&gt;% 
+    arrange(country) %&gt;% na.omit %&gt;% rename(total_alc = total_litres_of_pure_alcohol)
+head(fulldata)</code></pre>
+<pre><code>## # A tibble: 6 x 9
+##   country code  life_expectancy beer_servings spirit_servings wine_servings
+##   &lt;chr&gt;   &lt;fct&gt;           &lt;dbl&gt;         &lt;int&gt;           &lt;int&gt;         &lt;int&gt;
+## 1 Afghan… AFG              61.2             0               0             0
+## 2 Albania ALB              76.7            89             132            54
+## 3 Algeria DZA              74.7            25               0            14
+## 4 Angola  AGO              58.2           217              57            45
+## 5 Antigu… ATG              75.4           102             128            45
+## 6 Argent… ARG              75.6           193              25           221
+## # … with 3 more variables: total_alc &lt;dbl&gt;, region &lt;fct&gt;, sub_region &lt;fct&gt;</code></pre>
+</div>
+<div id="wrangling" class="section level2">
+<h2>Wrangling</h2>
+<p>First, I thought it would be interesting to find the proportion of the total pure alcohol drank that was beer, spirits, and wine, respectively. After using <code>mutate()</code>, <code>select()</code>, and <code>arrange()</code>, I found that the European countries, in general, consumed the most total alcohol but the most popular drink varied depending on the country. Supporting the stereotypes, the French drank a greater proportion of wine while Russians drank a greater proportion of spirits. Next, I took the mean for all the numeric variables in my dataset separately and then grouped by region and sub-region. The whole world drank on average more beer and a total of about 4.7 liters of pure alcohol while the average life expectancy was about 70 years old. When looking at the means grouped by region, it was clear that Europe consumed the most total alcohol while Asia consumed the least, but Europe still had the highest average life expectancy while Africa had the lowest mean life expectancy by 10 years when compared to the next closest region. The mean of subregions once again enforced that almost all the sub regions that were considered &quot;Western&quot; (Australia, America, Europe) had high total means of alcohol while still maintaining high mean life expectancies. The general standard deviation for all the numeric variables showed that the world has a large spread of beer drinkers (sd = 101.2112 beer cans), a large spread of total alcohol consumption (sd = ~3.7 liters), but had a relatively small spread of expected life expectancy (sd = ~ 8.6 years). The region standard deviations showed that Oceanic countries had the largest spread of total alcohol consumed but Africa had the greatest spread of life expectancy. Sub regional standard deviations showed that Eastern Asia had the highest deviation for both total alcohol consumed and life expectancy, which is expected when you think of Japan and South Korea having some of the world's highest life expectancies. The patterns shown in the variance of the general variables and then grouped by region and subregion were similar to the patterns shown in standard deviation with the exception of having the variance of spirit consumption being quite high (var = 7226.127).</p>
+<pre class="r"><code>library(dplyr)
+library(knitr)
+
+
+# Average proportions of beer, spirits, and wine drank per
+# person by country
+fulldata %&gt;% mutate(prop_beer = beer_servings/total_alc, prop_spirits = spirit_servings/total_alc, 
+    prop_wine = wine_servings/total_alc) %&gt;% select(country, 
+    region, prop_beer, prop_spirits, prop_wine, total_alc) %&gt;% 
+    arrange(-total_alc) %&gt;% head() %&gt;% kable</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">country</th>
+<th align="left">region</th>
+<th align="right">prop_beer</th>
+<th align="right">prop_spirits</th>
+<th align="right">prop_wine</th>
+<th align="right">total_alc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Belarus</td>
+<td align="left">Europe</td>
+<td align="right">9.861111</td>
+<td align="right">25.90278</td>
+<td align="right">2.916667</td>
+<td align="right">14.4</td>
+</tr>
+<tr class="even">
+<td align="left">Lithuania</td>
+<td align="left">Europe</td>
+<td align="right">26.589147</td>
+<td align="right">18.91473</td>
+<td align="right">4.341085</td>
+<td align="right">12.9</td>
+</tr>
+<tr class="odd">
+<td align="left">Grenada</td>
+<td align="left">Americas</td>
+<td align="right">16.722689</td>
+<td align="right">36.80672</td>
+<td align="right">2.352941</td>
+<td align="right">11.9</td>
+</tr>
+<tr class="even">
+<td align="left">Czechia</td>
+<td align="left">Europe</td>
+<td align="right">30.593220</td>
+<td align="right">14.40678</td>
+<td align="right">11.355932</td>
+<td align="right">11.8</td>
+</tr>
+<tr class="odd">
+<td align="left">France</td>
+<td align="left">Europe</td>
+<td align="right">10.762712</td>
+<td align="right">12.79661</td>
+<td align="right">31.355932</td>
+<td align="right">11.8</td>
+</tr>
+<tr class="even">
+<td align="left">Russian Federation</td>
+<td align="left">Europe</td>
+<td align="right">21.478261</td>
+<td align="right">28.34783</td>
+<td align="right">6.347826</td>
+<td align="right">11.5</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># mean for all numeric variables
+fulldata %&gt;% select_if(is.numeric) %&gt;% summarize(mean_total = mean(total_alc), 
+    mean_life = mean(life_expectancy), mean_beer = mean(beer_servings), 
+    mean_spirits = mean(spirit_servings), mean_wine = mean(wine_servings)) %&gt;% 
+    kable</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">mean_total</th>
+<th align="right">mean_life</th>
+<th align="right">mean_beer</th>
+<th align="right">mean_spirits</th>
+<th align="right">mean_wine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">4.701117</td>
+<td align="right">69.83503</td>
+<td align="right">106.2235</td>
+<td align="right">77.39106</td>
+<td align="right">50.02793</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># mean for all numeric variables grouped by region
+fulldata %&gt;% group_by(region) %&gt;% summarize(mean_total = mean(total_alc), 
+    mean_life = mean(life_expectancy), mean_beer = mean(beer_servings), 
+    mean_spirits = mean(spirit_servings), mean_wine = mean(wine_servings)) %&gt;% 
+    kable</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">region</th>
+<th align="right">mean_total</th>
+<th align="right">mean_life</th>
+<th align="right">mean_beer</th>
+<th align="right">mean_spirits</th>
+<th align="right">mean_wine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Africa</td>
+<td align="right">2.988462</td>
+<td align="right">59.64471</td>
+<td align="right">59.88462</td>
+<td align="right">15.57692</td>
+<td align="right">16.26923</td>
+</tr>
+<tr class="even">
+<td align="left">Americas</td>
+<td align="right">5.900000</td>
+<td align="right">73.58974</td>
+<td align="right">158.35484</td>
+<td align="right">134.25806</td>
+<td align="right">37.83871</td>
+</tr>
+<tr class="odd">
+<td align="left">Asia</td>
+<td align="right">2.185106</td>
+<td align="right">72.00564</td>
+<td align="right">35.51064</td>
+<td align="right">60.21277</td>
+<td align="right">12.85106</td>
+</tr>
+<tr class="even">
+<td align="left">Europe</td>
+<td align="right">9.441026</td>
+<td align="right">77.38990</td>
+<td align="right">216.30769</td>
+<td align="right">145.48718</td>
+<td align="right">150.84615</td>
+</tr>
+<tr class="odd">
+<td align="left">Oceania</td>
+<td align="right">3.230000</td>
+<td align="right">71.51920</td>
+<td align="right">88.60000</td>
+<td align="right">37.70000</td>
+<td align="right">44.90000</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># mean for all numeric varialbe grouped by sub region
+fulldata %&gt;% group_by(sub_region) %&gt;% summarize(mean_total = mean(total_alc), 
+    mean_life = mean(life_expectancy), mean_beer = mean(beer_servings), 
+    mean_spirits = mean(spirit_servings), mean_wine = mean(wine_servings)) %&gt;% 
+    kable</code></pre>
+<table style="width:100%;">
+<colgroup>
+<col width="35%" />
+<col width="12%" />
+<col width="11%" />
+<col width="12%" />
+<col width="15%" />
+<col width="11%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">sub_region</th>
+<th align="right">mean_total</th>
+<th align="right">mean_life</th>
+<th align="right">mean_beer</th>
+<th align="right">mean_spirits</th>
+<th align="right">mean_wine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Australia and New Zealand</td>
+<td align="right">9.8500000</td>
+<td align="right">81.38350</td>
+<td align="right">232.000000</td>
+<td align="right">75.500000</td>
+<td align="right">193.50000</td>
+</tr>
+<tr class="even">
+<td align="left">Central Asia</td>
+<td align="right">2.8200000</td>
+<td align="right">68.55580</td>
+<td align="right">40.200000</td>
+<td align="right">106.000000</td>
+<td align="right">11.60000</td>
+</tr>
+<tr class="odd">
+<td align="left">Eastern Asia</td>
+<td align="right">5.3400000</td>
+<td align="right">75.12420</td>
+<td align="right">74.600000</td>
+<td align="right">119.800000</td>
+<td align="right">8.20000</td>
+</tr>
+<tr class="even">
+<td align="left">Eastern Europe</td>
+<td align="right">10.7200000</td>
+<td align="right">73.04500</td>
+<td align="right">236.600000</td>
+<td align="right">242.900000</td>
+<td align="right">93.00000</td>
+</tr>
+<tr class="odd">
+<td align="left">Latin America and the Caribbean</td>
+<td align="right">5.7241379</td>
+<td align="right">73.15376</td>
+<td align="right">152.413793</td>
+<td align="right">133.862069</td>
+<td align="right">34.10345</td>
+</tr>
+<tr class="even">
+<td align="left">Melanesia</td>
+<td align="right">1.4000000</td>
+<td align="right">68.29850</td>
+<td align="right">49.500000</td>
+<td align="right">25.750000</td>
+<td align="right">3.50000</td>
+</tr>
+<tr class="odd">
+<td align="left">Micronesia</td>
+<td align="right">1.6500000</td>
+<td align="right">66.96800</td>
+<td align="right">41.500000</td>
+<td align="right">42.000000</td>
+<td align="right">9.50000</td>
+</tr>
+<tr class="even">
+<td align="left">Northern Africa</td>
+<td align="right">0.7333333</td>
+<td align="right">71.34800</td>
+<td align="right">17.000000</td>
+<td align="right">4.333333</td>
+<td align="right">7.50000</td>
+</tr>
+<tr class="odd">
+<td align="left">Northern America</td>
+<td align="right">8.4500000</td>
+<td align="right">79.91150</td>
+<td align="right">244.500000</td>
+<td align="right">140.000000</td>
+<td align="right">92.00000</td>
+</tr>
+<tr class="even">
+<td align="left">Northern Europe</td>
+<td align="right">9.5600000</td>
+<td align="right">78.56500</td>
+<td align="right">242.100000</td>
+<td align="right">130.400000</td>
+<td align="right">130.50000</td>
+</tr>
+<tr class="odd">
+<td align="left">Polynesia</td>
+<td align="right">1.8500000</td>
+<td align="right">72.64750</td>
+<td align="right">70.500000</td>
+<td align="right">19.500000</td>
+<td align="right">14.50000</td>
+</tr>
+<tr class="even">
+<td align="left">South-eastern Asia</td>
+<td align="right">2.1909091</td>
+<td align="right">71.06346</td>
+<td align="right">46.818182</td>
+<td align="right">48.363636</td>
+<td align="right">13.00000</td>
+</tr>
+<tr class="odd">
+<td align="left">Southern Asia</td>
+<td align="right">0.5555556</td>
+<td align="right">69.25367</td>
+<td align="right">5.888889</td>
+<td align="right">24.888889</td>
+<td align="right">0.00000</td>
+</tr>
+<tr class="even">
+<td align="left">Southern Europe</td>
+<td align="right">7.5916667</td>
+<td align="right">78.04433</td>
+<td align="right">160.833333</td>
+<td align="right">99.416667</td>
+<td align="right">163.25000</td>
+</tr>
+<tr class="odd">
+<td align="left">Sub-Saharan Africa</td>
+<td align="right">3.2826087</td>
+<td align="right">58.11820</td>
+<td align="right">65.478261</td>
+<td align="right">17.043478</td>
+<td align="right">17.41304</td>
+</tr>
+<tr class="even">
+<td align="left">Western Asia</td>
+<td align="right">1.9294118</td>
+<td align="right">74.16965</td>
+<td align="right">31.000000</td>
+<td align="right">55.588235</td>
+<td align="right">21.29412</td>
+</tr>
+<tr class="odd">
+<td align="left">Western Europe</td>
+<td align="right">10.6142857</td>
+<td align="right">80.79628</td>
+<td align="right">245.571429</td>
+<td align="right">106.857143</td>
+<td align="right">241.28571</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># sd for all numeric variables
+fulldata %&gt;% select_if(is.numeric) %&gt;% summarize(sd_total = sd(total_alc), 
+    sd_life = sd(life_expectancy), sd_beer = sd(beer_servings), 
+    sd_spirits = sd(spirit_servings), sd_wine = sd(wine_servings)) %&gt;% 
+    kable</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">sd_total</th>
+<th align="right">sd_life</th>
+<th align="right">sd_beer</th>
+<th align="right">sd_spirits</th>
+<th align="right">sd_wine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">3.765887</td>
+<td align="right">8.649445</td>
+<td align="right">101.2112</td>
+<td align="right">85.00663</td>
+<td align="right">79.77584</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># sd for all numeric variables grouped by region
+fulldata %&gt;% group_by(region) %&gt;% summarize(sd_total = sd(total_alc), 
+    sd_life = sd(life_expectancy), sd_beer = sd(beer_servings), 
+    sd_spirits = sd(spirit_servings), sd_wine = sd(wine_servings)) %&gt;% 
+    kable</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">region</th>
+<th align="right">sd_total</th>
+<th align="right">sd_life</th>
+<th align="right">sd_beer</th>
+<th align="right">sd_spirits</th>
+<th align="right">sd_wine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Africa</td>
+<td align="right">2.669703</td>
+<td align="right">6.802738</td>
+<td align="right">80.50275</td>
+<td align="right">27.81758</td>
+<td align="right">39.22540</td>
+</tr>
+<tr class="even">
+<td align="left">Americas</td>
+<td align="right">2.114868</td>
+<td align="right">4.146418</td>
+<td align="right">77.30397</td>
+<td align="right">86.21947</td>
+<td align="right">61.45464</td>
+</tr>
+<tr class="odd">
+<td align="left">Asia</td>
+<td align="right">2.524401</td>
+<td align="right">5.190728</td>
+<td align="right">43.18558</td>
+<td align="right">75.19480</td>
+<td align="right">31.56427</td>
+</tr>
+<tr class="even">
+<td align="left">Europe</td>
+<td align="right">2.449674</td>
+<td align="right">3.914034</td>
+<td align="right">83.07706</td>
+<td align="right">81.02010</td>
+<td align="right">90.79576</td>
+</tr>
+<tr class="odd">
+<td align="left">Oceania</td>
+<td align="right">3.544652</td>
+<td align="right">5.836648</td>
+<td align="right">80.88291</td>
+<td align="right">23.15191</td>
+<td align="right">79.20361</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># sd for all numeric variables grouped by sub region
+fulldata %&gt;% group_by(sub_region) %&gt;% summarize(sd_total = sd(total_alc), 
+    sd_life = sd(life_expectancy), sd_beer = sd(beer_servings), 
+    sd_spirits = sd(spirit_servings), sd_wine = sd(wine_servings)) %&gt;% 
+    kable</code></pre>
+<table style="width:100%;">
+<colgroup>
+<col width="37%" />
+<col width="12%" />
+<col width="12%" />
+<col width="12%" />
+<col width="13%" />
+<col width="12%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">sub_region</th>
+<th align="right">sd_total</th>
+<th align="right">sd_life</th>
+<th align="right">sd_beer</th>
+<th align="right">sd_spirits</th>
+<th align="right">sd_wine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Australia and New Zealand</td>
+<td align="right">0.7778175</td>
+<td align="right">0.7445849</td>
+<td align="right">41.012193</td>
+<td align="right">4.949747</td>
+<td align="right">26.162951</td>
+</tr>
+<tr class="even">
+<td align="left">Central Asia</td>
+<td align="right">2.3941596</td>
+<td align="right">1.4027835</td>
+<td align="right">48.080141</td>
+<td align="right">85.457592</td>
+<td align="right">12.198360</td>
+</tr>
+<tr class="odd">
+<td align="left">Eastern Asia</td>
+<td align="right">3.5871995</td>
+<td align="right">6.7233365</td>
+<td align="right">49.681989</td>
+<td align="right">102.328882</td>
+<td align="right">5.674504</td>
+</tr>
+<tr class="even">
+<td align="left">Eastern Europe</td>
+<td align="right">2.0890189</td>
+<td align="right">3.1543348</td>
+<td align="right">80.558054</td>
+<td align="right">73.206633</td>
+<td align="right">56.223759</td>
+</tr>
+<tr class="odd">
+<td align="left">Latin America and the Caribbean</td>
+<td align="right">2.0715169</td>
+<td align="right">3.9031779</td>
+<td align="right">76.385076</td>
+<td align="right">89.101757</td>
+<td align="right">61.789010</td>
+</tr>
+<tr class="even">
+<td align="left">Melanesia</td>
+<td align="right">0.4690416</td>
+<td align="right">2.6019121</td>
+<td align="right">23.388031</td>
+<td align="right">13.400871</td>
+<td align="right">5.000000</td>
+</tr>
+<tr class="odd">
+<td align="left">Micronesia</td>
+<td align="right">0.9192388</td>
+<td align="right">2.2825442</td>
+<td align="right">28.991378</td>
+<td align="right">11.313709</td>
+<td align="right">12.020815</td>
+</tr>
+<tr class="even">
+<td align="left">Northern Africa</td>
+<td align="right">0.6531973</td>
+<td align="right">4.6307349</td>
+<td align="right">18.633304</td>
+<td align="right">4.844241</td>
+<td align="right">8.479387</td>
+</tr>
+<tr class="odd">
+<td align="left">Northern America</td>
+<td align="right">0.3535534</td>
+<td align="right">1.9410053</td>
+<td align="right">6.363961</td>
+<td align="right">25.455844</td>
+<td align="right">11.313709</td>
+</tr>
+<tr class="even">
+<td align="left">Northern Europe</td>
+<td align="right">2.0961340</td>
+<td align="right">3.5193249</td>
+<td align="right">59.526745</td>
+<td align="right">66.831795</td>
+<td align="right">74.103906</td>
+</tr>
+<tr class="odd">
+<td align="left">Polynesia</td>
+<td align="right">1.0606602</td>
+<td align="right">0.6710479</td>
+<td align="right">48.790368</td>
+<td align="right">2.121320</td>
+<td align="right">13.435029</td>
+</tr>
+<tr class="even">
+<td align="left">South-eastern Asia</td>
+<td align="right">2.4357564</td>
+<td align="right">5.5945966</td>
+<td align="right">38.633711</td>
+<td align="right">89.345702</td>
+<td align="right">36.622397</td>
+</tr>
+<tr class="odd">
+<td align="left">Southern Asia</td>
+<td align="right">0.9422196</td>
+<td align="right">4.8485849</td>
+<td align="right">8.506533</td>
+<td align="right">47.792375</td>
+<td align="right">0.000000</td>
+</tr>
+<tr class="even">
+<td align="left">Southern Europe</td>
+<td align="right">2.6465959</td>
+<td align="right">2.8351449</td>
+<td align="right">88.821408</td>
+<td align="right">45.975207</td>
+<td align="right">99.696015</td>
+</tr>
+<tr class="odd">
+<td align="left">Sub-Saharan Africa</td>
+<td align="right">2.6951235</td>
+<td align="right">5.4240770</td>
+<td align="right">83.839195</td>
+<td align="right">29.246049</td>
+<td align="right">41.523528</td>
+</tr>
+<tr class="even">
+<td align="left">Western Asia</td>
+<td align="right">2.1724884</td>
+<td align="right">4.2130007</td>
+<td align="right">45.938818</td>
+<td align="right">55.636161</td>
+<td align="right">42.484945</td>
+</tr>
+<tr class="odd">
+<td align="left">Western Europe</td>
+<td align="right">0.9118271</td>
+<td align="right">0.7911583</td>
+<td align="right">72.451954</td>
+<td align="right">27.913131</td>
+<td align="right">69.951684</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># var for all numeric variables
+fulldata %&gt;% select_if(is.numeric) %&gt;% summarize(var_total = var(total_alc), 
+    var_life = var(life_expectancy), var_beer = var(beer_servings), 
+    var_spirits = var(spirit_servings), var_wine = var(wine_servings)) %&gt;% 
+    kable</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">var_total</th>
+<th align="right">var_life</th>
+<th align="right">var_beer</th>
+<th align="right">var_spirits</th>
+<th align="right">var_wine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">14.18191</td>
+<td align="right">74.8129</td>
+<td align="right">10243.7</td>
+<td align="right">7226.127</td>
+<td align="right">6364.185</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># var for all numeric variables grouped by region
+fulldata %&gt;% group_by(region) %&gt;% summarize(var_total = var(total_alc), 
+    var_life = var(life_expectancy), var_beer = var(beer_servings), 
+    var_spirits = var(spirit_servings), var_wine = var(wine_servings)) %&gt;% 
+    kable</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">region</th>
+<th align="right">var_total</th>
+<th align="right">var_life</th>
+<th align="right">var_beer</th>
+<th align="right">var_spirits</th>
+<th align="right">var_wine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Africa</td>
+<td align="right">7.127315</td>
+<td align="right">46.27724</td>
+<td align="right">6480.692</td>
+<td align="right">773.8175</td>
+<td align="right">1538.6320</td>
+</tr>
+<tr class="even">
+<td align="left">Americas</td>
+<td align="right">4.472667</td>
+<td align="right">17.19278</td>
+<td align="right">5975.903</td>
+<td align="right">7433.7978</td>
+<td align="right">3776.6731</td>
+</tr>
+<tr class="odd">
+<td align="left">Asia</td>
+<td align="right">6.372599</td>
+<td align="right">26.94366</td>
+<td align="right">1864.994</td>
+<td align="right">5654.2581</td>
+<td align="right">996.3034</td>
+</tr>
+<tr class="even">
+<td align="left">Europe</td>
+<td align="right">6.000904</td>
+<td align="right">15.31966</td>
+<td align="right">6901.798</td>
+<td align="right">6564.2564</td>
+<td align="right">8243.8704</td>
+</tr>
+<tr class="odd">
+<td align="left">Oceania</td>
+<td align="right">12.564556</td>
+<td align="right">34.06646</td>
+<td align="right">6542.044</td>
+<td align="right">536.0111</td>
+<td align="right">6273.2111</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># var for all numeric variables grouped by sub region
+fulldata %&gt;% group_by(sub_region) %&gt;% summarize(var_total = var(total_alc), 
+    var_life = var(life_expectancy), var_beer = var(beer_servings), 
+    var_spirits = var(spirit_servings), var_wine = var(wine_servings)) %&gt;% 
+    kable</code></pre>
+<table style="width:100%;">
+<colgroup>
+<col width="35%" />
+<col width="13%" />
+<col width="13%" />
+<col width="13%" />
+<col width="14%" />
+<col width="10%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">sub_region</th>
+<th align="right">var_total</th>
+<th align="right">var_life</th>
+<th align="right">var_beer</th>
+<th align="right">var_spirits</th>
+<th align="right">var_wine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Australia and New Zealand</td>
+<td align="right">0.6050000</td>
+<td align="right">0.5544066</td>
+<td align="right">1682.00000</td>
+<td align="right">24.50000</td>
+<td align="right">684.500</td>
+</tr>
+<tr class="even">
+<td align="left">Central Asia</td>
+<td align="right">5.7320000</td>
+<td align="right">1.9678014</td>
+<td align="right">2311.70000</td>
+<td align="right">7303.00000</td>
+<td align="right">148.800</td>
+</tr>
+<tr class="odd">
+<td align="left">Eastern Asia</td>
+<td align="right">12.8680000</td>
+<td align="right">45.2032531</td>
+<td align="right">2468.30000</td>
+<td align="right">10471.20000</td>
+<td align="right">32.200</td>
+</tr>
+<tr class="even">
+<td align="left">Eastern Europe</td>
+<td align="right">4.3640000</td>
+<td align="right">9.9498282</td>
+<td align="right">6489.60000</td>
+<td align="right">5359.21111</td>
+<td align="right">3161.111</td>
+</tr>
+<tr class="odd">
+<td align="left">Latin America and the Caribbean</td>
+<td align="right">4.2911823</td>
+<td align="right">15.2347977</td>
+<td align="right">5834.67980</td>
+<td align="right">7939.12315</td>
+<td align="right">3817.882</td>
+</tr>
+<tr class="even">
+<td align="left">Melanesia</td>
+<td align="right">0.2200000</td>
+<td align="right">6.7699465</td>
+<td align="right">547.00000</td>
+<td align="right">179.58333</td>
+<td align="right">25.000</td>
+</tr>
+<tr class="odd">
+<td align="left">Micronesia</td>
+<td align="right">0.8450000</td>
+<td align="right">5.2100081</td>
+<td align="right">840.50000</td>
+<td align="right">128.00000</td>
+<td align="right">144.500</td>
+</tr>
+<tr class="even">
+<td align="left">Northern Africa</td>
+<td align="right">0.4266667</td>
+<td align="right">21.4437061</td>
+<td align="right">347.20000</td>
+<td align="right">23.46667</td>
+<td align="right">71.900</td>
+</tr>
+<tr class="odd">
+<td align="left">Northern America</td>
+<td align="right">0.1250000</td>
+<td align="right">3.7675015</td>
+<td align="right">40.50000</td>
+<td align="right">648.00000</td>
+<td align="right">128.000</td>
+</tr>
+<tr class="even">
+<td align="left">Northern Europe</td>
+<td align="right">4.3937778</td>
+<td align="right">12.3856475</td>
+<td align="right">3543.43333</td>
+<td align="right">4466.48889</td>
+<td align="right">5491.389</td>
+</tr>
+<tr class="odd">
+<td align="left">Polynesia</td>
+<td align="right">1.1250000</td>
+<td align="right">0.4503052</td>
+<td align="right">2380.50000</td>
+<td align="right">4.50000</td>
+<td align="right">180.500</td>
+</tr>
+<tr class="even">
+<td align="left">South-eastern Asia</td>
+<td align="right">5.9329091</td>
+<td align="right">31.2995110</td>
+<td align="right">1492.56364</td>
+<td align="right">7982.65455</td>
+<td align="right">1341.200</td>
+</tr>
+<tr class="odd">
+<td align="left">Southern Asia</td>
+<td align="right">0.8877778</td>
+<td align="right">23.5087752</td>
+<td align="right">72.36111</td>
+<td align="right">2284.11111</td>
+<td align="right">0.000</td>
+</tr>
+<tr class="even">
+<td align="left">Southern Europe</td>
+<td align="right">7.0044697</td>
+<td align="right">8.0380464</td>
+<td align="right">7889.24242</td>
+<td align="right">2113.71970</td>
+<td align="right">9939.295</td>
+</tr>
+<tr class="odd">
+<td align="left">Sub-Saharan Africa</td>
+<td align="right">7.2636908</td>
+<td align="right">29.4206112</td>
+<td align="right">7029.01063</td>
+<td align="right">855.33140</td>
+<td align="right">1724.203</td>
+</tr>
+<tr class="even">
+<td align="left">Western Asia</td>
+<td align="right">4.7197059</td>
+<td align="right">17.7493751</td>
+<td align="right">2110.37500</td>
+<td align="right">3095.38235</td>
+<td align="right">1804.971</td>
+</tr>
+<tr class="odd">
+<td align="left">Western Europe</td>
+<td align="right">0.8314286</td>
+<td align="right">0.6259314</td>
+<td align="right">5249.28571</td>
+<td align="right">779.14286</td>
+<td align="right">4893.238</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># summary of all the numeric variables; not grouped
+fulldata %&gt;% select_if(is.numeric) %&gt;% summary() %&gt;% kable</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">life_expectancy</th>
+<th align="left">beer_servings</th>
+<th align="left">spirit_servings</th>
+<th align="left">wine_servings</th>
+<th align="left">total_alc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Min. :47.56</td>
+<td align="left">Min. : 0.0</td>
+<td align="left">Min. : 0.00</td>
+<td align="left">Min. : 0.00</td>
+<td align="left">Min. : 0.000</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">1st Qu.:63.45</td>
+<td align="left">1st Qu.: 21.0</td>
+<td align="left">1st Qu.: 4.00</td>
+<td align="left">1st Qu.: 1.00</td>
+<td align="left">1st Qu.: 1.300</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Median :72.28</td>
+<td align="left">Median : 76.0</td>
+<td align="left">Median : 51.00</td>
+<td align="left">Median : 8.00</td>
+<td align="left">Median : 4.200</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">Mean :69.84</td>
+<td align="left">Mean :106.2</td>
+<td align="left">Mean : 77.39</td>
+<td align="left">Mean : 50.03</td>
+<td align="left">Mean : 4.701</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">3rd Qu.:75.98</td>
+<td align="left">3rd Qu.:188.5</td>
+<td align="left">3rd Qu.:122.00</td>
+<td align="left">3rd Qu.: 60.50</td>
+<td align="left">3rd Qu.: 7.200</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">Max. :82.97</td>
+<td align="left">Max. :376.0</td>
+<td align="left">Max. :438.00</td>
+<td align="left">Max. :370.00</td>
+<td align="left">Max. :14.400</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="wrangling-2" class="section level2">
+<h2>Wrangling (2)</h2>
+<p>The minimums for all the general numerical variables except for life expectancy were 0. This minimum zero consumption of alcohol is further discovered to belong to the regions, Africa and Asia where there are large Muslim populations who do not drink. The maximum of total alcohol consumed is unsurprisingly Europe while the max life expectancy belongs to Asia. Surprisingly, the max amount of beer and wine consumed in the world belongs to the African region. Using <code>group_by()</code> on two categorial variables, region and sub_region, was useful in identifying the disparities between sub regions in each region for the minimum of the numerical variables. Earlier, it was discussed that East Asia had the largest standard deviation for life expectancy and alcohol consumption, using <code>filter()</code> I was able to determine that Mongola and Japan had a difference in life expectancy of about 15 years while the zero total alcohol consumption in North Korea is contrasted starkly against South Korea's high alcohol consumption (total_alc = 9.8 liters). Finally, I created a correlation matrix comparing the numerical variables in fulldata. From this matrix, I determined that life expectancy did not have a strong correlation with any of the alcohol consumption variables. However, total alcohol consumption correlated strongly with beer servings consumed per person, pointing to the fact that most people's increased consumption of beer correlates to an increase of their total alcohol consumption.</p>
+<pre class="r"><code># min for all numeric variables grouped by region
+fulldata %&gt;% group_by(region, sub_region) %&gt;% summarize(min_total = min(total_alc), 
+    min_life = min(life_expectancy), min_beer = min(beer_servings), 
+    min_spirits = min(spirit_servings), min_wine = min(wine_servings)) %&gt;% 
+    kable</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">region</th>
+<th align="left">sub_region</th>
+<th align="right">min_total</th>
+<th align="right">min_life</th>
+<th align="right">min_beer</th>
+<th align="right">min_spirits</th>
+<th align="right">min_wine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Africa</td>
+<td align="left">Northern Africa</td>
+<td align="right">0.0</td>
+<td align="right">62.620</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">Africa</td>
+<td align="left">Sub-Saharan Africa</td>
+<td align="right">0.0</td>
+<td align="right">47.560</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">Americas</td>
+<td align="left">Latin America and the Caribbean</td>
+<td align="right">2.2</td>
+<td align="right">61.296</td>
+<td align="right">1</td>
+<td align="right">25</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">Americas</td>
+<td align="left">Northern America</td>
+<td align="right">8.2</td>
+<td align="right">78.539</td>
+<td align="right">240</td>
+<td align="right">122</td>
+<td align="right">84</td>
+</tr>
+<tr class="odd">
+<td align="left">Asia</td>
+<td align="left">Central Asia</td>
+<td align="right">0.3</td>
+<td align="right">66.657</td>
+<td align="right">2</td>
+<td align="right">15</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">Asia</td>
+<td align="left">Eastern Asia</td>
+<td align="right">0.0</td>
+<td align="right">67.383</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">Asia</td>
+<td align="left">South-eastern Asia</td>
+<td align="right">0.1</td>
+<td align="right">64.357</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">Asia</td>
+<td align="left">Southern Asia</td>
+<td align="right">0.0</td>
+<td align="right">61.226</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">Asia</td>
+<td align="left">Western Asia</td>
+<td align="right">0.0</td>
+<td align="right">63.508</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">Europe</td>
+<td align="left">Eastern Europe</td>
+<td align="right">6.3</td>
+<td align="right">68.813</td>
+<td align="right">109</td>
+<td align="right">122</td>
+<td align="right">18</td>
+</tr>
+<tr class="odd">
+<td align="left">Europe</td>
+<td align="left">Northern Europe</td>
+<td align="right">6.6</td>
+<td align="right">72.738</td>
+<td align="right">152</td>
+<td align="right">60</td>
+<td align="right">56</td>
+</tr>
+<tr class="even">
+<td align="left">Europe</td>
+<td align="left">Southern Europe</td>
+<td align="right">3.9</td>
+<td align="right">74.009</td>
+<td align="right">31</td>
+<td align="right">27</td>
+<td align="right">8</td>
+</tr>
+<tr class="odd">
+<td align="left">Europe</td>
+<td align="left">Western Europe</td>
+<td align="right">9.4</td>
+<td align="right">80.072</td>
+<td align="right">127</td>
+<td align="right">75</td>
+<td align="right">175</td>
+</tr>
+<tr class="even">
+<td align="left">Oceania</td>
+<td align="left">Australia and New Zealand</td>
+<td align="right">9.3</td>
+<td align="right">80.857</td>
+<td align="right">203</td>
+<td align="right">72</td>
+<td align="right">175</td>
+</tr>
+<tr class="odd">
+<td align="left">Oceania</td>
+<td align="left">Melanesia</td>
+<td align="right">0.9</td>
+<td align="right">64.634</td>
+<td align="right">21</td>
+<td align="right">11</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">Oceania</td>
+<td align="left">Micronesia</td>
+<td align="right">1.0</td>
+<td align="right">65.354</td>
+<td align="right">21</td>
+<td align="right">34</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">Oceania</td>
+<td align="left">Polynesia</td>
+<td align="right">1.1</td>
+<td align="right">72.173</td>
+<td align="right">36</td>
+<td align="right">18</td>
+<td align="right">5</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># max for all numeric variables grouped by region
+fulldata %&gt;% group_by(region) %&gt;% summarize(max_total = max(total_alc), 
+    max_life = max(life_expectancy), max_beer = max(beer_servings), 
+    max_spirits = max(spirit_servings), max_wine = max(wine_servings)) %&gt;% 
+    kable</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">region</th>
+<th align="right">max_total</th>
+<th align="right">max_life</th>
+<th align="right">max_beer</th>
+<th align="right">max_spirits</th>
+<th align="right">max_wine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Africa</td>
+<td align="right">9.1</td>
+<td align="right">74.793</td>
+<td align="right">376</td>
+<td align="right">152</td>
+<td align="right">233</td>
+</tr>
+<tr class="even">
+<td align="left">Americas</td>
+<td align="right">11.9</td>
+<td align="right">81.284</td>
+<td align="right">333</td>
+<td align="right">438</td>
+<td align="right">221</td>
+</tr>
+<tr class="odd">
+<td align="left">Asia</td>
+<td align="right">9.8</td>
+<td align="right">82.974</td>
+<td align="right">192</td>
+<td align="right">258</td>
+<td align="right">149</td>
+</tr>
+<tr class="even">
+<td align="left">Europe</td>
+<td align="right">14.4</td>
+<td align="right">82.270</td>
+<td align="right">361</td>
+<td align="right">373</td>
+<td align="right">370</td>
+</tr>
+<tr class="odd">
+<td align="left">Oceania</td>
+<td align="right">10.4</td>
+<td align="right">81.910</td>
+<td align="right">261</td>
+<td align="right">79</td>
+<td align="right">212</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># Compared the mean life expectancy and mean total alcohol
+# consumption by liters in East Asian countries
+fulldata %&gt;% filter(sub_region == &quot;Eastern Asia&quot;) %&gt;% group_by(country) %&gt;% 
+    summarize(mean_life = mean(life_expectancy), mean_total_alc = mean(total_alc)) %&gt;% 
+    arrange(mean_life) %&gt;% kable</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">country</th>
+<th align="right">mean_life</th>
+<th align="right">mean_total_alc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Mongolia</td>
+<td align="right">67.383</td>
+<td align="right">4.9</td>
+</tr>
+<tr class="even">
+<td align="left">Korea (Democratic People's Republic of)</td>
+<td align="right">69.572</td>
+<td align="right">0.0</td>
+</tr>
+<tr class="odd">
+<td align="left">China</td>
+<td align="right">75.236</td>
+<td align="right">5.0</td>
+</tr>
+<tr class="even">
+<td align="left">Korea, Republic of</td>
+<td align="right">80.456</td>
+<td align="right">9.8</td>
+</tr>
+<tr class="odd">
+<td align="left">Japan</td>
+<td align="right">82.974</td>
+<td align="right">7.0</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># created a correlation matrix comparing all of the numerical
+# variables in fulldata
+cormat &lt;- fulldata %&gt;% select_if(is.numeric) %&gt;% cor(use = &quot;pair&quot;)
+cormat</code></pre>
+<pre><code>##                 life_expectancy beer_servings spirit_servings wine_servings
+## life_expectancy       1.0000000     0.4268397       0.3672607     0.4829906
+## beer_servings         0.4268397     1.0000000       0.4835822     0.5352715
+## spirit_servings       0.3672607     0.4835822       1.0000000     0.1974770
+## wine_servings         0.4829906     0.5352715       0.1974770     1.0000000
+## total_alc             0.3871442     0.8415037       0.6520482     0.6670153
+##                 total_alc
+## life_expectancy 0.3871442
+## beer_servings   0.8415037
+## spirit_servings 0.6520482
+## wine_servings   0.6670153
+## total_alc       1.0000000</code></pre>
+</div>
+<div id="visualizing-heatmap" class="section level2">
+<h2>Visualizing: Heatmap</h2>
+<p>The following is a correlation heatmap. As shown in the heatmap, all of the correlations between the alcohol-related variables and life expectancy did not have a strong correlation (between .37 to .48). However, it is shown that total pure alcohol consumption was strongly correlated with beer servings, showing that a greater amount of beer consumed correlates with a greater total amount of alcohol consumed in general.</p>
+<pre class="r"><code># correlation heat map
+tidycor &lt;- cormat %&gt;% as.data.frame %&gt;% rownames_to_column(&quot;var1&quot;) %&gt;% 
+    pivot_longer(-1, names_to = &quot;var2&quot;, values_to = &quot;correlation&quot;)
+
+tidycor</code></pre>
+<pre><code>## # A tibble: 25 x 3
+##    var1            var2            correlation
+##    &lt;chr&gt;           &lt;chr&gt;                 &lt;dbl&gt;
+##  1 life_expectancy life_expectancy       1    
+##  2 life_expectancy beer_servings         0.427
+##  3 life_expectancy spirit_servings       0.367
+##  4 life_expectancy wine_servings         0.483
+##  5 life_expectancy total_alc             0.387
+##  6 beer_servings   life_expectancy       0.427
+##  7 beer_servings   beer_servings         1    
+##  8 beer_servings   spirit_servings       0.484
+##  9 beer_servings   wine_servings         0.535
+## 10 beer_servings   total_alc             0.842
+## # … with 15 more rows</code></pre>
+<pre class="r"><code>tidycor %&gt;% ggplot(aes(var1, var2, fill = correlation)) + geom_tile() + 
+    scale_fill_gradient2(low = &quot;white&quot;, mid = &quot;yellow&quot;, high = &quot;red&quot;) + 
+    geom_text(aes(label = round(correlation, 2)), color = &quot;black&quot;, 
+        size = 4) + theme(axis.text.x = element_text(angle = 90, 
+    hjust = 1)) + coord_fixed() + xlab(&quot;&quot;) + ylab(&quot;&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="visualizing-plot-1" class="section level2">
+<h2>Visualizing: Plot 1</h2>
+<p>The following bar graph shows that Europe has the highest total alcohol consumption by far. The bars representing each region is split into different colored blocks representing the sub-regions belonging to that specific region. As shown in the in the plot, most of Africa's total alcohol consumption can be attributed to Sub-Saharan Africa. On the other hand, it can also be clearly seen that any one sub-region in Europe outdrinks the whole of Africa. Finally, it can be noted that all the largest blocks (a.k.a. sub-regions), indicating greater total alcohol consumption per person, belongs, in general, to sub-regions that are richer, Western, and predominantly Caucasian. An example is shown in the Oceania bar where Australia/New Zealand contributes to about 2/3 of Ocean's total alcohol consumption.</p>
+<pre class="r"><code># ggplot
+library(ggplot2)
+
+ggplot(fulldata, aes(x = region, y = total_alc, fill = sub_region)) + 
+    geom_bar(stat = &quot;summary&quot;, fun = mean) + scale_y_continuous(name = &quot;Total Alcohol Consumed Per Person (liters)&quot;, 
+    breaks = seq(0, 40, 5)) + xlab(&quot;Region&quot;) + ggtitle(&quot;Total Alcohol Consumed By Region (2010)&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /> ##Visualizing: Plot 2 This plot compares life expectancy, total alcohol consumption, and beer servings per person during 2010. With the faceted plot, you can clearly see the difference in both life expectancy and alcohol consumption based on region. Interestingly, beer is consumed more in the Americas, Europe, and the two biggest contributors to Oceana's total alcohol consumption. Again, this drives home the observation that beer seems to be a favorite alcoholic beverage in Wester communities. In addition to this, Africa and Asia's plots can be contrasted against each other. Most of Africa's life expectancy observations are lower compared to other regions AND the consume less total alcohol and beer in general. On the other hand, Asia also consumes less total alcohol and beer compared to Western regions, but Asia has a plot that shows the region has a much better life expectancy than Africa.</p>
+<pre class="r"><code>ggplot(fulldata, aes(total_alc, life_expectancy)) + geom_point(size = 3, 
+    aes(color = beer_servings)) + scale_color_gradient(low = &quot;yellow&quot;, 
+    high = &quot;red&quot;) + ggtitle(&quot;Life Expectancy versus Total Alcohol Consumption (2010)&quot;) + 
+    ylab(&quot;Life Expectancy (years)&quot;) + xlab(&quot;Total Amount of Pure Alcohol Conusmed Per Person (liters)&quot;) + 
+    facet_wrap(~region)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="dimensionality-reduction" class="section level2">
+<h2>Dimensionality Reduction</h2>
+<p>After scaling and processing my numeric data into clust_fall, I used a for loop paired the silhouette method to find the optimal number clusters that would best represent my data. After running the silhouette method, the highest silhouette width indicated that 2 clusters would best represent my data. As mentioned before, I only used numerics (euclidean) to run this analysis. I then used PAM to run the cluster analysis. I visualized the clusters with GGally. From this, it was shown that cluster 1 had the countries that had a higher overall life expectancy, beer serving, spirit serving, wine serving, and total alcohol consumption. Cluster 2 consisted of a lower value in all the numerical variables and had 71 observations. On the other hand, cluster 1 had about 30 more observations, with 108 observations. From the scatterplots picture below, it is shown that none of the variables provide an extremely clear separation of the two clusters. The variable that comes the closest to a clean separation of the two clusters is total alcohol consumption. According to silhouette plot of pam, the average silhouette width is 0.43, which is considered a weak structure that can be considered artificial. According to the cluster plot, the two components explain 77.94% of the point variability. As shown in the cluster plot, component 2 does not do much to separate cluster 1 and cluster 2.</p>
+<pre class="r"><code>library(cluster)
+clust_full &lt;- fulldata %&gt;% dplyr::select_if(is.numeric) %&gt;% scale
+
+sil_width &lt;- vector()  #empty vector to hold mean sil width
+for (i in 2:10) {
+    kms &lt;- kmeans(clust_full, centers = i)  #compute k-means solution
+    sil &lt;- silhouette(kms$cluster, dist(clust_full))  #get sil widths
+    sil_width[i] &lt;- mean(sil[, 3])  #take averages (higher is better)
+}
+ggplot() + geom_line(aes(x = 1:10, y = sil_width)) + scale_x_continuous(name = &quot;k&quot;, 
+    breaks = 1:10)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>pam1 &lt;- clust_full %&gt;% pam(k = 2)  #want to do 2 clusters
+pam1</code></pre>
+<pre><code>## Medoids:
+##       ID life_expectancy beer_servings spirit_servings wine_servings  total_alc
+## [1,] 127      -0.6013132    -0.6147885      -0.4516243    -0.6145712 -0.8500300
+## [2,]  43       1.1093165     0.8475006       0.9012113     0.7893626  0.9290991
+## Clustering vector:
+##   [1] 1 2 1 1 2 2 1 2 2 1 2 1 1 2 2 2 2 1 1 1 2 1 2 1 2 1 1 1 1 2 1 1 2 2 1 1 1
+##  [38] 1 2 1 2 2 2 2 2 1 2 1 1 1 1 1 2 1 1 1 2 2 2 1 2 2 1 2 2 1 1 1 2 1 1 2 2 1
+##  [75] 1 1 1 2 1 2 1 2 1 2 1 1 1 2 1 1 1 2 1 1 1 1 2 2 1 1
+##  [ reached getOption(&quot;max.print&quot;) -- omitted 79 entries ]
+## Objective function:
+##    build     swap 
+## 1.524621 1.502006 
+## 
+## Available components:
+##  [1] &quot;medoids&quot;    &quot;id.med&quot;     &quot;clustering&quot; &quot;objective&quot;  &quot;isolation&quot; 
+##  [6] &quot;clusinfo&quot;   &quot;silinfo&quot;    &quot;diss&quot;       &quot;call&quot;       &quot;data&quot;</code></pre>
+<pre class="r"><code>library(GGally)
+fulldata %&gt;% mutate(cluster = as.factor(pam1$clustering)) %&gt;% 
+    ggpairs(columns = c(&quot;beer_servings&quot;, &quot;spirit_servings&quot;, &quot;wine_servings&quot;, 
+        &quot;total_alc&quot;, &quot;life_expectancy&quot;), aes(color = cluster))</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(pam1, which = 2)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-9-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fulldata1 &lt;- fulldata %&gt;% mutate(cluster = as.factor(pam1$clustering))
+fulldata1 %&gt;% group_by(cluster) %&gt;% summarize_if(is.numeric, 
+    mean, na.rm = T)</code></pre>
+<pre><code>## # A tibble: 2 x 6
+##   cluster life_expectancy beer_servings spirit_servings wine_servings total_alc
+##   &lt;fct&gt;             &lt;dbl&gt;         &lt;dbl&gt;           &lt;dbl&gt;         &lt;dbl&gt;     &lt;dbl&gt;
+## 1 1                  65.8          44.4            32.6          10.9      2.23
+## 2 2                  76.0         200.            146.          109.       8.45</code></pre>
+<pre class="r"><code>glimpse(fulldata1)</code></pre>
+<pre><code>## Rows: 179
+## Columns: 10
+## $ country         &lt;chr&gt; &quot;Afghanistan&quot;, &quot;Albania&quot;, &quot;Algeria&quot;, &quot;Angola&quot;, &quot;Antig…
+## $ code            &lt;fct&gt; AFG, ALB, DZA, AGO, ATG, ARG, ARM, AUS, AUT, AZE, BHS…
+## $ life_expectancy &lt;dbl&gt; 61.226, 76.652, 74.676, 58.192, 75.412, 75.595, 73.33…
+## $ beer_servings   &lt;int&gt; 0, 89, 25, 217, 102, 193, 21, 261, 279, 21, 122, 42, …
+## $ spirit_servings &lt;int&gt; 0, 132, 0, 57, 128, 25, 179, 72, 75, 46, 176, 63, 0, …
+## $ wine_servings   &lt;int&gt; 0, 54, 14, 45, 45, 221, 11, 212, 191, 5, 51, 7, 0, 36…
+## $ total_alc       &lt;dbl&gt; 0.0, 4.9, 0.7, 5.9, 4.9, 8.3, 3.8, 10.4, 9.7, 1.3, 6.…
+## $ region          &lt;fct&gt; Asia, Europe, Africa, Africa, Americas, Americas, Asi…
+## $ sub_region      &lt;fct&gt; Southern Asia, Southern Europe, Northern Africa, Sub-…
+## $ cluster         &lt;fct&gt; 1, 2, 1, 1, 2, 2, 1, 2, 2, 1, 2, 1, 1, 2, 2, 2, 2, 1,…</code></pre>
+<pre class="r"><code>plot(pam1, which = 1)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-9-4.png" width="672" style="display: block; margin: auto;" /> Note that the <code>echo = FALSE</code> parameter was added to the code chunk to prevent printing of the R code that generated the plot.</p>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../js/docs.min.js"></script>
+<script src="../../js/main.js"></script>
+
+<script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

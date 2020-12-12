@@ -1,0 +1,75 @@
+---
+title: The Complicated World of Regular Expressions
+author: ''
+date: '2020-12-11'
+slug: the-complicated-world-of-regular-expressions
+categories: []
+tags: []
+description: ''
+---
+
+#The Complicated World of Regular Expressions
+
+Regular expressions, or regex, are one of the most difficult yet useful things I have learned so far this year. Though regex has complicated notation that I still cannot commit to memory, it is undoubtedly one of the most important tools with the right type of data. By definition, regex "extract information from text by searching for matches of a specific pattern." While their fuction in parsing/replacing strings or reformatting/cleaning data is undoubtable, subtle nuances in code, such as the difference in ".+ or .*" or accidentally including a whitespace, can cause your code to miss important data. Nevertheless, when done accurately, nothing can beat the powers of regex used under the right conditions.
+
+## Regex Uses
+
+Other than just matching and identifying matching strings, regex has many other uses, including but not limited to substitution and matching multiple groups. For the sake of simplicity, using a single string with a sentence is one of the best ways to demonstrate regex's function. In the string, I chose to use an age-old tongue twister about Peter Piper. Since all of the words are repeated multiple times within the string, it serves as an interesting way to dissect the what exactly makes the tongue twister so difficult to say. In the following python chunk, `re.sub()`, `re.split()`, and `re.findall` were used in various ways to isolate sections of the tongue twister. 
+
+```{python}
+import re
+
+string = "Peter Piper picked a peck of pickled peppers\nA peck of pickled peppers Peter Piper picked\nIf Peter Piper picked a peck of pickled peppers\nWhere’s the peck of pickled peppers Peter Piper picked?"
+
+print(string) #shows that "\n" indicates a new line when the string is printed
+
+re.sub(r"[\n]",", ",string) #replace new line with a comma and space between each phrase instead. 
+
+re.split(r'.peppers.*',string) #split the string by using peppers as a divider
+
+re.findall(r".*Peter Piper picked", string) #Displays multiple matches for Peter Piper picked
+
+
+
+```
+
+##Regex in Action with Datasets
+Take for example, the drinks dataset under the package fivethirtyeight in R. I previously used drinks in a project to identify the amount of different types of alcoholic beverages were consumed by each country in one year. Regex presents itself as a way to identify countries using patterns. Similarly, I used the HI dataset under the Ecdat package in R to further demonstrate regex's capabilities. 
+
+```{R}
+#This is a R chunk
+
+library(reticulate)
+
+library(fivethirtyeight)
+
+library(Ecdat)
+
+drinks <- drinks
+
+HI <- HI
+```
+
+After calling the datasets, drinks and HI, in R, the python chunk below shows that datasets called in R can speak to python (and vice versa) using reticulate. Below are just a few examples of how regex can be used to single out specific countries (e.g. USA) or call countries that have a certain non-alphanumeric symbol (e.g. ___ & ___). Similarly, the observation of wives with a ranges of education can also be singled out if regex is used correctly!
+```{python}
+#This is a python chunk
+
+print(r.drinks.head())
+import re
+drink = r.drinks
+
+drink[drink.country.str.contains("\s\W\s", regex = True)] #matches with countries/regions that have a symbol within their names
+
+drink[drink.country.str.contains("A$", regex = True)] #singles out USA 
+
+HI = r.HI
+
+HI_mid = HI[HI.education.str.contains("\d.*\W\d\d", regex = True)] #identifies wives with a range of years recorded as education
+
+HI_mid.head()
+
+
+```
+Too bad the drinks dataset only included data from 2010, 2020 definitely has been a record-breaking year for drinking among other things. 
+
+![](/post/2020-12-12-the-complicated-world-of-regular-expressions_files/4bwisb.jpg)
